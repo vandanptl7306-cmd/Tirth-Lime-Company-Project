@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { ProductCard } from "@/components/site/ProductCard";
-import { PRODUCTS } from "@/lib/products";
+import { PRODUCTS, getStoredProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/products")({
   head: () => ({
@@ -27,6 +28,12 @@ export const Route = createFileRoute("/products")({
 });
 
 function ProductsPage() {
+  const [products, setProducts] = useState(PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getStoredProducts());
+  }, []);
+
   return (
     <SiteLayout>
       <section className="border-b border-border bg-secondary/50 py-14">
@@ -43,7 +50,7 @@ function ProductsPage() {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {PRODUCTS.map((p) => (
+            {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

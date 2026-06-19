@@ -26,6 +26,7 @@ export function SiteFooter() {
               ["/quality", "Quality & Hygiene"],
               ["/about", "About Us"],
               ["/contact", "Contact"],
+              ["/admin", "Admin Panel"],
             ].map(([to, label]) => (
               <li key={to}>
                 <Link

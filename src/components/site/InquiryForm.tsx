@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PRODUCTS, buildWaLink } from "@/lib/products";
+import { PRODUCTS, buildWaLink, getStoredProducts } from "@/lib/products";
 
 const schema = z.object({
   name: z.string().min(2, "Please enter your name"),
@@ -32,13 +33,21 @@ const schema = z.object({
     .min(7, "Please enter a valid phone number")
     .regex(/^[0-9+\-\s()]+$/, "Only digits and + - ( ) are allowed"),
   product: z.string().min(1, "Please select a product"),
+  packSize: z.string().min(1, "Please select a pack size"),
   quantity: z.string().min(1, "Please enter an estimated quantity"),
+  address: z.string().min(5, "Please enter your delivery address/location"),
   message: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export function InquiryForm() {
+  const [products, setProducts] = useState(PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getStoredProducts());
+  }, []);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -46,7 +55,9 @@ export function InquiryForm() {
       company: "",
       phone: "",
       product: "",
+      packSize: "",
       quantity: "",
+      address: "",
       message: "",
     },
   });
@@ -58,7 +69,9 @@ export function InquiryForm() {
       `Company / Shop: ${values.company}`,
       `Phone: ${values.phone}`,
       `Product: ${values.product}`,
+      `Pack Size: ${values.packSize}`,
       `Estimated Quantity: ${values.quantity}`,
+      `Delivery Address: ${values.address}`,
     ];
     if (values.message?.trim()) lines.push(`Message: ${values.message.trim()}`);
     const url = buildWaLink(lines.join("\n"));
@@ -107,7 +120,7 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="+91 98765 43210" {...field} />
+                  <Input type="tel" placeholder="+91 98765 xxxxx" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -120,8 +133,57 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>Estimated Quantity</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 500 units / 100 kg" {...field} />
+                  <Input placeholder="e.g. 500 units" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="product"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product Interested In</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={`${p.name} ${p.variant}`}>
+                        {p.name} — {p.variant}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="packSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Pack Size Quantity</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select packaging size" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="12x1 pack">12x1 Pack (12 Units)</SelectItem>
+                    <SelectItem value="24x1 pack">24x1 Pack (24 Units)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -130,28 +192,18 @@ export function InquiryForm() {
 
         <FormField
           control={form.control}
-          name="product"
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Interested In</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a product" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {PRODUCTS.map((p) => (
-                    <SelectItem key={p.id} value={`${p.name} ${p.variant}`}>
-                      {p.name} — {p.variant}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Delivery Address / Location</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Shop 12, APMC Market, Surat, Gujarat - 395003" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
 
         <FormField
           control={form.control}

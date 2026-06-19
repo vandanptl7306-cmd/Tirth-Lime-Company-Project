@@ -7,14 +7,18 @@ import {
   ArrowRight,
   MessageCircle,
   CheckCircle2,
+  MapPin,
+  Globe,
+  Map,
 } from "lucide-react";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { ProductCard } from "@/components/site/ProductCard";
 import { InquiryForm } from "@/components/site/InquiryForm";
-import { PRODUCTS, buildWaLink } from "@/lib/products";
+import { PRODUCTS, buildWaLink, getStoredProducts } from "@/lib/products";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
@@ -57,10 +61,50 @@ const PILLARS = [
   },
 ];
 
+const NETWORK_REGIONS = [
+  {
+    title: "Gujarat Core Coverage",
+    description: "Full wholesale supply and retail distribution network across all major districts.",
+    hubs: [
+      "Ahmedabad (Manufacturing Base)",
+      "Vadodara",
+      "Surat",
+      "Rajkot",
+      "Mehsana",
+      "Palanpur",
+      "Anand",
+      "Nadiad",
+      "Bhavnagar",
+      "Jamnagar"
+    ]
+  },
+  {
+    title: "Rajasthan Border Areas",
+    description: "Reliable logistics servicing key border towns and markets.",
+    hubs: ["Abu Road", "Sanchore", "Dungarpur", "Banswara", "Mount Abu"]
+  },
+  {
+    title: "Madhya Pradesh Border Areas",
+    description: "Direct supply routes connecting eastern border checkposts.",
+    hubs: ["Dahod", "Jhabua", "Alirajpur", "Godhra (Transit Hub)"]
+  },
+  {
+    title: "Maharashtra Border Areas",
+    description: "Seamless distribution routes reaching southern border industrial belts.",
+    hubs: ["Vapi", "Valsad", "Navsari", "Talasari", "Nandurbar"]
+  }
+];
+
 function Home() {
   const heroWa = buildWaLink(
     "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.",
   );
+
+  const [products, setProducts] = useState(PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getStoredProducts());
+  }, []);
 
   return (
     <SiteLayout>
@@ -213,7 +257,7 @@ function Home() {
             description="Six variants under our Tirth and Riddhi Siddhi brands — choose the format your customers prefer."
           />
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {PRODUCTS.map((p) => (
+            {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -223,6 +267,107 @@ function Home() {
                 View full catalog <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* DISTRIBUTION & VENDOR NETWORK */}
+      <section className="bg-secondary/40 py-20 border-y border-border/50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            eyebrow="Network & Reach"
+            title={
+              <span>
+                Our Vendor & Distribution <span className="text-brand-blue">Network</span>
+              </span>
+            }
+            description="Providing seamless supply and delivery of high-quality edible chuna across Gujarat and key border locations in neighboring states."
+          />
+
+          <div className="mt-12 grid gap-8 lg:grid-cols-3">
+            {/* Left/Main Column: Highlights & Map Graphic */}
+            <div className="lg:col-span-1 flex flex-col justify-between rounded-3xl border border-border bg-card p-8 shadow-sm">
+              <div>
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold">
+                  <Globe className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-2xl font-bold text-foreground">Regional Presence</h3>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  Based in Ahmedabad, our supply chain is optimized to deliver bulk chuna parcels to wholesalers, distributors, and paan-shop vendors efficiently.
+                </p>
+
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-blue/10 text-brand-blue">
+                      <Truck className="h-4 w-4" />
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-foreground block">Daily Dispatches</span>
+                      <span className="text-muted-foreground">Reliable transport partners for bulk orders.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-gold/15 text-brand-gold">
+                      <Map className="h-4 w-4" />
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-foreground block">Border Market Access</span>
+                      <span className="text-muted-foreground">Serving border towns of RJ, MP, and MH.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-border pt-6">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">Distributor Partnership</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Interested in representing Tirth or Riddhi Siddhi brands in your territory? Contact us to discuss exclusive terms.
+                </p>
+                <Button asChild size="sm" className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white font-medium">
+                  <a href={buildWaLink("Hello, I want to discuss becoming a distributor for your edible chuna products.")} target="_blank" rel="noopener noreferrer">
+                    Become a Distributor
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Columns: Regions Grid */}
+            <div className="lg:col-span-2 grid gap-6 sm:grid-cols-2">
+              {NETWORK_REGIONS.map((region, idx) => {
+                const isGujarat = idx === 0;
+                return (
+                  <div
+                    key={region.title}
+                    className={`rounded-3xl border p-6 bg-card shadow-sm transition-all hover:shadow-md hover:border-brand-gold/40 flex flex-col justify-between ${
+                      isGujarat ? "sm:col-span-2 border-brand-gold/30 bg-gradient-to-br from-card via-card to-brand-gold-soft/20" : "border-border"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className={`h-4 w-4 ${isGujarat ? "text-brand-gold" : "text-brand-blue"}`} />
+                        <h4 className="font-bold text-foreground text-lg">{region.title}</h4>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{region.description}</p>
+                      
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {region.hubs.map((hub) => (
+                          <span
+                            key={hub}
+                            className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium border ${
+                              hub.includes("Manufacturing") 
+                                ? "bg-primary text-primary-foreground border-primary" 
+                                : "bg-secondary text-secondary-foreground border-border hover:border-brand-gold/30 hover:bg-white transition-colors"
+                            }`}
+                          >
+                            {hub}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

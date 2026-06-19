@@ -5,9 +5,10 @@ export type Product = {
   id: string;
   name: string;
   variant: string;
-  color: "white" | "yellow";
+  color: "white" | "yellow" | string;
   image: string;
   tag: string;
+  minQuantity?: number;
 };
 
 export const PRODUCTS: Product[] = [
@@ -68,4 +69,23 @@ export const ADDRESS = "Kachiyavalo Kuvo, Badarkha, Ahmedabad — 387810";
 
 export function buildWaLink(message: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+export function getStoredProducts(): Product[] {
+  if (typeof window === "undefined") return PRODUCTS;
+  const stored = localStorage.getItem("khodiyar_products_data");
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      return PRODUCTS;
+    }
+  }
+  localStorage.setItem("khodiyar_products_data", JSON.stringify(PRODUCTS));
+  return PRODUCTS;
+}
+
+export function saveStoredProducts(products: Product[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("khodiyar_products_data", JSON.stringify(products));
 }

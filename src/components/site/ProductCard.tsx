@@ -34,6 +34,16 @@ export function ProductCard({ product }: { product: Product }) {
           <p className="mt-0.5 text-sm font-medium text-brand-blue">{product.variant}</p>
         </div>
         <p className="text-sm text-muted-foreground">{product.tag}</p>
+        <div className="inline-flex items-center gap-1.5 rounded-md bg-secondary/80 px-2 py-0.5 text-xs text-muted-foreground w-fit">
+          <span className="font-semibold text-foreground">Pack Sizes:</span>
+          <span>12x1 & 24x1</span>
+        </div>
+        {product.minQuantity !== undefined && (
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-brand-gold-soft/60 text-amber-900 border border-brand-gold/30 px-2 py-0.5 text-[11px] font-medium w-fit">
+            <span className="font-semibold text-amber-950">Min. Order Qty:</span>
+            <span>{product.minQuantity} Boxes</span>
+          </div>
+        )}
         <Button
           asChild
           className="mt-auto justify-between bg-primary text-primary-foreground hover:bg-brand-blue"

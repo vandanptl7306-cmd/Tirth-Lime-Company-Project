@@ -7,9 +7,13 @@ import { Toaster } from "@/components/ui/sonner";
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
+      <div className="print:hidden">
+        <SiteHeader />
+      </div>
       <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <div className="print:hidden">
+        <SiteFooter />
+      </div>
       <WhatsAppFab />
       <Toaster richColors position="top-center" />
     </div>
