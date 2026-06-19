@@ -396,7 +396,9 @@ function AdminDashboard() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
       
       toast.success("Excel sheet exported successfully!");
     } catch (error: any) {
@@ -1323,12 +1325,14 @@ function AdminDashboard() {
 
       {/* PRINT INVOICE MODAL & TEMPLATE */}
       {activeInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 print:bg-white print:p-0 print:block print:static">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 print:bg-white print:p-0 print:block print:absolute print:top-0 print:left-0 print:w-full print:h-auto">
           <style>{`
             @media print {
               body {
                 background: white !important;
                 color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
               }
               body * {
                 visibility: hidden !important;
@@ -1337,14 +1341,17 @@ function AdminDashboard() {
                 visibility: visible !important;
               }
               #print-invoice-area {
-                position: relative !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 100% !important;
                 height: auto !important;
                 background: white !important;
                 color: black !important;
-                padding: 24px !important;
+                padding: 16px !important;
                 border: none !important;
                 box-shadow: none !important;
+                margin: 0 !important;
               }
             }
           `}</style>
