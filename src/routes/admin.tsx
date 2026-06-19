@@ -140,6 +140,8 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"sales" | "products">("sales");
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
+  const [deleteSaleConfirm, setDeleteSaleConfirm] = useState<string | null>(null);
 
   // Form states for product management
   const [prodName, setProdName] = useState("");
@@ -206,10 +208,7 @@ function AdminDashboard() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this sale transaction?")) {
-      const updated = sales.filter((s) => s.id !== id);
-      saveSales(updated);
-    }
+    setDeleteSaleConfirm(id);
   };
 
   // Form Item row handlers
@@ -345,12 +344,7 @@ function AdminDashboard() {
   };
 
   const handleDeleteProduct = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this product from the catalog?")) {
-      const newProductsList = products.filter((p) => p.id !== id);
-      setProducts(newProductsList);
-      saveStoredProducts(newProductsList);
-      toast.success("Product deleted from catalog.");
-    }
+    setDeleteProductConfirm(id);
   };
 
   // Excel CSV exporter
@@ -1492,6 +1486,71 @@ function AdminDashboard() {
                   <p className="mt-2 text-[10px]">Authorized Signatory</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE PRODUCT CONFIRMATION MODAL */}
+      {deleteProductConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
+            <h3 className="text-lg font-bold text-foreground">Delete Product</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Are you sure you want to delete this product from the catalog? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteProductConfirm(null)}
+                className="font-medium"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const newProductsList = products.filter((p) => p.id !== deleteProductConfirm);
+                  setProducts(newProductsList);
+                  saveStoredProducts(newProductsList);
+                  toast.success("Product deleted from catalog.");
+                  setDeleteProductConfirm(null);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE SALE CONFIRMATION MODAL */}
+      {deleteSaleConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
+            <h3 className="text-lg font-bold text-foreground">Delete Sale Record</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Are you sure you want to delete this sale transaction? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteSaleConfirm(null)}
+                className="font-medium"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const updated = sales.filter((s) => s.id !== deleteSaleConfirm);
+                  saveSales(updated);
+                  toast.success("Sale transaction deleted successfully.");
+                  setDeleteSaleConfirm(null);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+              >
+                Delete
+              </Button>
             </div>
           </div>
         </div>
