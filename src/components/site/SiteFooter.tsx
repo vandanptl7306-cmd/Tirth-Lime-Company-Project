@@ -1,33 +1,37 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { ADDRESS, EMAIL, PHONE_DISPLAY } from "@/lib/products";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function SiteFooter() {
+  const { t } = useLanguage();
+
+  const QUICK_LINKS = [
+    ["/products", t("nav.products")],
+    ["/quality", t("nav.quality")],
+    ["/about", t("nav.about")],
+    ["/contact", t("nav.contact")],
+    ["/admin", "Admin Panel"],
+  ] as const;
+
   return (
     <footer className="mt-20 border-t border-border bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-2">
           <div className="text-xl font-bold">
-            Khodiyar <span className="text-brand-gold">Industry</span>
+            {t("logo.title")} <span className="text-brand-gold">Industry</span>
           </div>
           <p className="mt-3 max-w-md text-sm text-primary-foreground/75">
-            Hygienically manufactured, FSSAI-certified edible chuna (lime water) for
-            wholesalers, distributors, and paan-shop vendors across India.
+            {t("footer.desc")}
           </p>
         </div>
 
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
-            Quick Links
+            {t("footer.quickLinks")}
           </h3>
           <ul className="mt-4 space-y-2 text-sm">
-            {[
-              ["/products", "Products"],
-              ["/quality", "Quality & Hygiene"],
-              ["/about", "About Us"],
-              ["/contact", "Contact"],
-              ["/admin", "Admin Panel"],
-            ].map(([to, label]) => (
+            {QUICK_LINKS.map(([to, label]) => (
               <li key={to}>
                 <Link
                   to={to}
@@ -42,7 +46,7 @@ export function SiteFooter() {
 
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
-            Contact
+            {t("footer.contact")}
           </h3>
           <ul className="mt-4 space-y-3 text-sm text-primary-foreground/85">
             <li className="flex gap-3">
@@ -66,7 +70,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-primary-foreground/10">
         <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-primary-foreground/60 sm:px-6 lg:px-8">
-          © {new Date().getFullYear()} Khodiyar Industry. All rights reserved.
+          © {new Date().getFullYear()} {t("logo.title")} Industry. {t("footer.rights")}
         </div>
       </div>
     </footer>

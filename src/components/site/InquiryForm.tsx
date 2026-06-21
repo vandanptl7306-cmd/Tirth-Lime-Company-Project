@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,29 +24,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PRODUCTS, buildWaLink, getStoredProducts } from "@/lib/products";
-
-const schema = z.object({
-  name: z.string().min(2, "Please enter your name"),
-  company: z.string().min(2, "Please enter your company or shop name"),
-  phone: z
-    .string()
-    .min(7, "Please enter a valid phone number")
-    .regex(/^[0-9+\-\s()]+$/, "Only digits and + - ( ) are allowed"),
-  product: z.string().min(1, "Please select a product"),
-  packSize: z.string().min(1, "Please select a pack size"),
-  quantity: z.string().min(1, "Please enter an estimated quantity"),
-  address: z.string().min(5, "Please enter your delivery address/location"),
-  message: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function InquiryForm() {
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState(PRODUCTS);
 
   useEffect(() => {
     setProducts(getStoredProducts());
   }, []);
+
+  const schema = useMemo(() => z.object({
+    name: z.string().min(2, t("form.validation.name")),
+    company: z.string().min(2, t("form.validation.company")),
+    phone: z
+      .string()
+      .min(7, t("form.validation.phoneMin"))
+      .regex(/^[0-9+\-\s()]+$/, t("form.validation.phoneRegex")),
+    product: z.string().min(1, t("form.validation.product")),
+    packSize: z.string().min(1, t("form.validation.packSize")),
+    quantity: z.string().min(1, t("form.validation.quantity")),
+    address: z.string().min(5, t("form.validation.address")),
+    message: z.string().optional(),
+  }), [language, t]);
+
+  type FormValues = z.infer<typeof schema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -62,21 +64,34 @@ export function InquiryForm() {
     },
   });
 
+  // Re-trigger validation when schema (language) changes so current errors translate instantly
+  useEffect(() => {
+    if (form.formState.isSubmitted) {
+      form.trigger();
+    }
+  }, [language, form]);
+
   function onSubmit(values: FormValues) {
+    const header = language === "gu" ? "*નવી જથ્થાબંધ પૂછપરછ — ખોડિયાર ઇન્ડસ્ટ્રી*" : 
+                   language === "hi" ? "*नई थोक पूछताछ — खोदियार इंडस्ट्री*" :
+                   "*New Bulk Inquiry — Khodiyar Industry*";
+
     const lines = [
-      "*New Bulk Inquiry — Khodiyar Industry*",
-      `Name: ${values.name}`,
-      `Company / Shop: ${values.company}`,
-      `Phone: ${values.phone}`,
-      `Product: ${values.product}`,
-      `Pack Size: ${values.packSize}`,
-      `Estimated Quantity: ${values.quantity}`,
-      `Delivery Address: ${values.address}`,
+      header,
+      `${t("form.labels.name")}: ${values.name}`,
+      `${t("form.labels.company")}: ${values.company}`,
+      `${t("form.labels.phone")}: ${values.phone}`,
+      `${t("form.labels.product")}: ${values.product}`,
+      `${t("form.labels.packSize")}: ${values.packSize}`,
+      `${t("form.labels.quantity")}: ${values.quantity}`,
+      `${t("form.labels.address")}: ${values.address}`,
     ];
-    if (values.message?.trim()) lines.push(`Message: ${values.message.trim()}`);
+    if (values.message?.trim()) {
+      lines.push(`${t("form.labels.message")}: ${values.message.trim()}`);
+    }
     const url = buildWaLink(lines.join("\n"));
     window.open(url, "_blank", "noopener,noreferrer");
-    toast.success("Opening WhatsApp with your inquiry…");
+    toast.success(t("form.toast"));
     form.reset();
   }
 
@@ -89,9 +104,9 @@ export function InquiryForm() {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Your Name</FormLabel>
+                <FormLabel>{t("form.labels.name")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Sanjay Patel" {...field} />
+                  <Input placeholder={t("form.placeholders.name")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,9 +117,9 @@ export function InquiryForm() {
             name="company"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company / Shop Name</FormLabel>
+                <FormLabel>{t("form.labels.company")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Shree Traders" {...field} />
+                  <Input placeholder={t("form.placeholders.company")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,9 +133,9 @@ export function InquiryForm() {
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel>{t("form.labels.phone")}</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="+91 98765 xxxxx" {...field} />
+                  <Input type="tel" placeholder={t("form.placeholders.phone")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -131,9 +146,9 @@ export function InquiryForm() {
             name="quantity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Estimated Quantity</FormLabel>
+                <FormLabel>{t("form.labels.quantity")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 500 units" {...field} />
+                  <Input placeholder={t("form.placeholders.quantity")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,19 +162,24 @@ export function InquiryForm() {
             name="product"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Product Interested In</FormLabel>
+                <FormLabel>{t("form.labels.product")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a product" />
+                      <SelectValue placeholder={t("form.placeholders.product")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={`${p.name} ${p.variant}`}>
-                        {p.name} — {p.variant}
-                      </SelectItem>
-                    ))}
+                    {products.map((p) => {
+                      const transKey = p.id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                      const pName = t(`products.${transKey}.name`);
+                      const pVar = t(`products.${transKey}.variant`);
+                      return (
+                        <SelectItem key={p.id} value={`${pName} ${pVar}`}>
+                          {pName} — {pVar}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -172,16 +192,16 @@ export function InquiryForm() {
             name="packSize"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pack Size Quantity</FormLabel>
+                <FormLabel>{t("form.labels.packSize")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select packaging size" />
+                      <SelectValue placeholder={t("form.placeholders.packSize")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="12x1 pack">12x1 Pack (12 Units)</SelectItem>
-                    <SelectItem value="24x1 pack">24x1 Pack (24 Units)</SelectItem>
+                    <SelectItem value="12x1 pack">{t("form.packSizes.pack12")}</SelectItem>
+                    <SelectItem value="24x1 pack">{t("form.packSizes.pack24")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -195,26 +215,25 @@ export function InquiryForm() {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Delivery Address / Location</FormLabel>
+              <FormLabel>{t("form.labels.address")}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Shop 12, APMC Market, Surat, Gujarat - 395003" {...field} />
+                <Input placeholder={t("form.placeholders.address")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-
         <FormField
           control={form.control}
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message (optional)</FormLabel>
+              <FormLabel>{t("form.labels.message")}</FormLabel>
               <FormControl>
                 <Textarea
                   rows={4}
-                  placeholder="Any additional details about your requirement…"
+                  placeholder={t("form.placeholders.message")}
                   {...field}
                 />
               </FormControl>
@@ -229,11 +248,10 @@ export function InquiryForm() {
           className="bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
         >
           <Send className="mr-2 h-4 w-4" />
-          Send Inquiry via WhatsApp
+          {t("form.submit")}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Submitting opens WhatsApp with your inquiry pre-filled. No data is stored on our
-          servers.
+          {t("form.info")}
         </p>
       </form>
     </Form>

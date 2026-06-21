@@ -19,6 +19,7 @@ import { SectionHeading } from "@/components/site/SectionHeading";
 import { ProductCard } from "@/components/site/ProductCard";
 import { InquiryForm } from "@/components/site/InquiryForm";
 import { PRODUCTS, buildWaLink, getStoredProducts } from "@/lib/products";
+import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
@@ -43,68 +44,101 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const PILLARS = [
-  {
-    icon: ShieldCheck,
-    title: "100% Hygienic Manufacturing",
-    desc: "Every batch is produced in a controlled facility following strict food-safety protocols.",
-  },
-  {
-    icon: Sparkles,
-    title: "Premium Raw Materials",
-    desc: "Carefully sourced limestone and filtered water for consistent purity and texture.",
-  },
-  {
-    icon: Truck,
-    title: "Reliable Bulk Supply",
-    desc: "On-time dispatch and dependable distribution for wholesalers across India.",
-  },
-];
-
-const NETWORK_REGIONS = [
-  {
-    title: "Gujarat Core Coverage",
-    description: "Full wholesale supply and retail distribution network across all major districts.",
-    hubs: [
-      "Ahmedabad (Manufacturing Base)",
-      "Vadodara",
-      "Surat",
-      "Rajkot",
-      "Mehsana",
-      "Palanpur",
-      "Anand",
-      "Nadiad",
-      "Bhavnagar",
-      "Jamnagar"
-    ]
-  },
-  {
-    title: "Rajasthan Border Areas",
-    description: "Reliable logistics servicing key border towns and markets.",
-    hubs: ["Abu Road", "Sanchore", "Dungarpur", "Banswara", "Mount Abu"]
-  },
-  {
-    title: "Madhya Pradesh Border Areas",
-    description: "Direct supply routes connecting eastern border checkposts.",
-    hubs: ["Dahod", "Jhabua", "Alirajpur", "Godhra (Transit Hub)"]
-  },
-  {
-    title: "Maharashtra Border Areas",
-    description: "Seamless distribution routes reaching southern border industrial belts.",
-    hubs: ["Vapi", "Valsad", "Navsari", "Talasari", "Nandurbar"]
-  }
-];
-
 function Home() {
-  const heroWa = buildWaLink(
-    "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.",
-  );
+  const { t, language } = useLanguage();
+
+  let waInquireMsg = "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.";
+  if (language === "gu") {
+    waInquireMsg = "નમસ્તે ખોડિયાર ઇન્ડસ્ટ્રી, હું તમારા ખાવાલાયક ચૂનાની પ્રોડક્ટ શ્રેણી માટે પૂછપરછ કરવા માંગુ છું.";
+  } else if (language === "hi") {
+    waInquireMsg = "नमस्ते खोदियार इंडस्ट्री, मैं आपकी खाने योग्य चूना उत्पाद श्रृंखला के बारे में पूछताछ करना चाहता हूँ।";
+  }
+
+  const heroWa = buildWaLink(waInquireMsg);
+
+  let waDistributorMsg = "Hello, I want to discuss becoming a distributor for your edible chuna products.";
+  if (language === "gu") {
+    waDistributorMsg = "નમસ્તે, હું તમારા ખાવાલાયક ચૂનાના ઉત્પાદનો માટે વિતરક બનવા ચર્ચા કરવા માંગુ છું.";
+  } else if (language === "hi") {
+    waDistributorMsg = "नमस्ते, मैं आपके खाने योग्य चूना उत्पादों के लिए वितरक बनने के बारे में चर्चा करना चाहता हूँ।";
+  }
+
+  const distributorWa = buildWaLink(waDistributorMsg);
 
   const [products, setProducts] = useState(PRODUCTS);
 
   useEffect(() => {
     setProducts(getStoredProducts());
   }, []);
+
+  const pillars = [
+    {
+      icon: ShieldCheck,
+      title: t("whyChooseUs.pillar1Title"),
+      desc: t("whyChooseUs.pillar1Desc"),
+    },
+    {
+      icon: Sparkles,
+      title: t("whyChooseUs.pillar2Title"),
+      desc: t("whyChooseUs.pillar2Desc"),
+    },
+    {
+      icon: Truck,
+      title: t("whyChooseUs.pillar3Title"),
+      desc: t("whyChooseUs.pillar3Desc"),
+    },
+  ];
+
+  const networkRegions = [
+    {
+      title: t("network.regions.gujarat"),
+      description: t("network.regions.gujaratDesc"),
+      hubs: [
+        t("network.hubs.ahmedabad"),
+        t("network.hubs.vadodara"),
+        t("network.hubs.surat"),
+        t("network.hubs.rajkot"),
+        t("network.hubs.mehsana"),
+        t("network.hubs.palanpur"),
+        t("network.hubs.anand"),
+        t("network.hubs.nadiad"),
+        t("network.hubs.bhavnagar"),
+        t("network.hubs.jamnagar")
+      ]
+    },
+    {
+      title: t("network.regions.rajasthan"),
+      description: t("network.regions.rajasthanDesc"),
+      hubs: [
+        t("network.hubs.aburoad"),
+        t("network.hubs.sanchore"),
+        t("network.hubs.dungarpur"),
+        t("network.hubs.banswara"),
+        t("network.hubs.mountabu")
+      ]
+    },
+    {
+      title: t("network.regions.mp"),
+      description: t("network.regions.mpDesc"),
+      hubs: [
+        t("network.hubs.dahod"),
+        t("network.hubs.jhabua"),
+        t("network.hubs.alirajpur"),
+        t("network.hubs.godhra")
+      ]
+    },
+    {
+      title: t("network.regions.maharashtra"),
+      description: t("network.regions.maharashtraDesc"),
+      hubs: [
+        t("network.hubs.vapi"),
+        t("network.hubs.valsad"),
+        t("network.hubs.navsari"),
+        t("network.hubs.talasari"),
+        t("network.hubs.nandurbar")
+      ]
+    }
+  ];
 
   return (
     <SiteLayout>
@@ -121,15 +155,14 @@ function Home() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-gold-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900">
               <BadgeCheck className="h-4 w-4" />
-              FSSAI Certified Manufacturer
+              {t("hero.badge")}
             </div>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Premium Edible Chuna{" "}
-              <span className="text-brand-blue">for Your Business.</span>
+              {t("hero.title")}{" "}
+              <span className="text-brand-blue">{t("hero.titleAccent")}</span>
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              High-quality, hygienically manufactured lime water for wholesale and
-              distribution. Trusted by retailers and paan-shop vendors across India.
+              {t("hero.desc")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button
@@ -138,7 +171,7 @@ function Home() {
                 className="bg-primary text-primary-foreground hover:bg-brand-blue"
               >
                 <Link to="/products">
-                  View Products <ArrowRight className="ml-2 h-4 w-4" />
+                  {t("hero.viewProducts")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button
@@ -149,20 +182,20 @@ function Home() {
               >
                 <a href={heroWa} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  Inquire on WhatsApp
+                  {t("hero.inquireWhatsApp")}
                 </a>
               </Button>
             </div>
             <ul className="mt-8 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
-                "Two trusted brands: Tirth & Riddhi Siddhi",
-                "White & yellow chuna variants",
-                "Medium, Ghata, Packing & Loose",
-                "Pan-India bulk distribution",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2">
+                t("hero.bullet1"),
+                t("hero.bullet2"),
+                t("hero.bullet3"),
+                t("hero.bullet4"),
+              ].map((bulletText) => (
+                <li key={bulletText} className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
-                  {t}
+                  {bulletText}
                 </li>
               ))}
             </ul>
@@ -194,9 +227,9 @@ function Home() {
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="text-xs">
-                <div className="font-semibold text-foreground">FSSAI Compliant</div>
+                <div className="font-semibold text-foreground">{t("hero.compliantBadge")}</div>
                 <div className="text-muted-foreground">
-                  Food-grade manufacturing standards
+                  {t("hero.compliantDesc")}
                 </div>
               </div>
             </div>
@@ -208,9 +241,9 @@ function Home() {
       <section className="bg-secondary/60 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            eyebrow="Why Choose Us"
-            title="Trust built on quality and hygiene"
-            description="Our manufacturing process and certifications give B2B partners confidence in every batch they distribute."
+            eyebrow={t("whyChooseUs.eyebrow")}
+            title={t("whyChooseUs.title")}
+            description={t("whyChooseUs.desc")}
           />
 
           <div className="mx-auto mt-10 flex max-w-2xl items-center gap-4 rounded-2xl border border-brand-gold/40 bg-card p-5 shadow-sm">
@@ -219,20 +252,19 @@ function Home() {
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
-                Certification
+                {t("whyChooseUs.certLabel")}
               </div>
               <div className="text-lg font-bold text-foreground">
-                FSSAI Certified Food-Grade Manufacturer
+                {t("whyChooseUs.certTitle")}
               </div>
               <p className="text-sm text-muted-foreground">
-                Compliant with all applicable Food Safety and Standards Authority of India
-                regulations for edible lime products.
+                {t("whyChooseUs.certDesc")}
               </p>
             </div>
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {PILLARS.map((p) => (
+            {pillars.map((p) => (
               <div
                 key={p.title}
                 className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-gold/50 hover:shadow-lg"
@@ -252,9 +284,9 @@ function Home() {
       <section id="products" className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            eyebrow="Our Catalog"
-            title="Edible Chuna Product Range"
-            description="Six variants under our Tirth and Riddhi Siddhi brands — choose the format your customers prefer."
+            eyebrow={t("catalog.eyebrow")}
+            title={t("catalog.title")}
+            description={t("catalog.desc")}
           />
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((p) => (
@@ -264,7 +296,7 @@ function Home() {
           <div className="mt-10 text-center">
             <Button asChild variant="outline" size="lg">
               <Link to="/products">
-                View full catalog <ArrowRight className="ml-2 h-4 w-4" />
+                {t("catalog.viewFull")} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -275,25 +307,31 @@ function Home() {
       <section className="bg-secondary/40 py-20 border-y border-border/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            eyebrow="Network & Reach"
+            eyebrow={t("network.eyebrow")}
             title={
               <span>
-                Our Vendor & Distribution <span className="text-brand-blue">Network</span>
+                {language === "gu" ? (
+                  <span>અમારું વિક્રેતા અને વિતરણ <span className="text-brand-blue">નેટવર્ક</span></span>
+                ) : language === "hi" ? (
+                  <span>हमारा विक्रेता और वितरण <span className="text-brand-blue">नेटवर्क</span></span>
+                ) : (
+                  <span>Our Vendor & Distribution <span className="text-brand-blue">Network</span></span>
+                )}
               </span>
             }
-            description="Providing seamless supply and delivery of high-quality edible chuna across Gujarat and key border locations in neighboring states."
+            description={t("network.desc")}
           />
 
           <div className="mt-12 grid gap-8 lg:grid-cols-3">
-            {/* Left/Main Column: Highlights & Map Graphic */}
+            {/* Left/Main Column: Highlights */}
             <div className="lg:col-span-1 flex flex-col justify-between rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div>
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold">
                   <Globe className="h-6 w-6" />
                 </div>
-                <h3 className="mt-4 text-2xl font-bold text-foreground">Regional Presence</h3>
+                <h3 className="mt-4 text-2xl font-bold text-foreground">{t("network.presenceTitle")}</h3>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  Based in Ahmedabad, our supply chain is optimized to deliver bulk chuna parcels to wholesalers, distributors, and paan-shop vendors efficiently.
+                  {t("network.presenceDesc")}
                 </p>
 
                 <div className="mt-6 space-y-4">
@@ -302,8 +340,8 @@ function Home() {
                       <Truck className="h-4 w-4" />
                     </div>
                     <div className="text-xs">
-                      <span className="font-semibold text-foreground block">Daily Dispatches</span>
-                      <span className="text-muted-foreground">Reliable transport partners for bulk orders.</span>
+                      <span className="font-semibold text-foreground block">{t("network.dispatchTitle")}</span>
+                      <span className="text-muted-foreground">{t("network.dispatchDesc")}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -311,21 +349,21 @@ function Home() {
                       <Map className="h-4 w-4" />
                     </div>
                     <div className="text-xs">
-                      <span className="font-semibold text-foreground block">Border Market Access</span>
-                      <span className="text-muted-foreground">Serving border towns of RJ, MP, and MH.</span>
+                      <span className="font-semibold text-foreground block">{t("network.borderTitle")}</span>
+                      <span className="text-muted-foreground">{t("network.borderDesc")}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-8 border-t border-border pt-6">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">Distributor Partnership</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">{t("network.partnerTitle")}</h4>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Interested in representing Tirth or Riddhi Siddhi brands in your territory? Contact us to discuss exclusive terms.
+                  {t("network.partnerDesc")}
                 </p>
                 <Button asChild size="sm" className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white font-medium">
-                  <a href={buildWaLink("Hello, I want to discuss becoming a distributor for your edible chuna products.")} target="_blank" rel="noopener noreferrer">
-                    Become a Distributor
+                  <a href={distributorWa} target="_blank" rel="noopener noreferrer">
+                    {t("network.becomeDistributor")}
                   </a>
                 </Button>
               </div>
@@ -333,7 +371,7 @@ function Home() {
 
             {/* Right Columns: Regions Grid */}
             <div className="lg:col-span-2 grid gap-6 sm:grid-cols-2">
-              {NETWORK_REGIONS.map((region, idx) => {
+              {networkRegions.map((region, idx) => {
                 const isGujarat = idx === 0;
                 return (
                   <div
@@ -354,7 +392,7 @@ function Home() {
                           <span
                             key={hub}
                             className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium border ${
-                              hub.includes("Manufacturing") 
+                              hub.includes("Manufacturing") || hub.includes("ઉત્પાદન") || hub.includes("उत्पादन")
                                 ? "bg-primary text-primary-foreground border-primary" 
                                 : "bg-secondary text-secondary-foreground border-border hover:border-brand-gold/30 hover:bg-white transition-colors"
                             }`}
@@ -387,31 +425,33 @@ function Home() {
           </div>
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-brand-gold/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-gold">
-              About Us
+              {t("aboutSection.eyebrow")}
             </div>
             <h2 className="mt-4 text-3xl font-bold sm:text-4xl">
-              A name B2B partners trust for{" "}
-              <span className="text-brand-gold">edible chuna</span>
+              {language === "gu" ? (
+                <span>ખાવાલાયક ચૂના માટે B2B ભાગીદારોનું <span className="text-brand-gold">વિશ્વસનીય નામ</span></span>
+              ) : language === "hi" ? (
+                <span>खाने योग्य चूने के लिए B2B भागीदारों का <span className="text-brand-gold">विश्वसनीय नाम</span></span>
+              ) : (
+                <span>A name B2B partners trust for <span className="text-brand-gold">edible chuna</span></span>
+              )}
             </h2>
             <p className="mt-5 text-primary-foreground/80">
-              Khodiyar Industry has been manufacturing edible chuna with an uncompromising
-              focus on purity, hygiene and consistency. Our modern facility, careful sourcing
-              and process discipline let wholesalers, distributors and paan-shop vendors
-              stock our brands with confidence.
+              {t("aboutSection.desc")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button
                 asChild
                 className="bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
               >
-                <Link to="/about">Learn more about us</Link>
+                <Link to="/about">{t("aboutSection.learnMore")}</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
               >
-                <Link to="/quality">Quality & Hygiene</Link>
+                <Link to="/quality">{t("aboutSection.qualityHygiene")}</Link>
               </Button>
             </div>
           </div>
@@ -424,25 +464,31 @@ function Home() {
           <div className="lg:col-span-2">
             <SectionHeading
               align="left"
-              eyebrow="Bulk Inquiry"
-              title="Get a wholesale quote"
-              description="Tell us what you need and we'll respond on WhatsApp with pricing and dispatch details."
+              eyebrow={t("inquirySection.eyebrow")}
+              title={t("inquirySection.title")}
+              description={t("inquirySection.desc")}
             />
             <ul className="mt-8 space-y-4 text-sm">
               {[
-                "Fastest response via WhatsApp",
-                "Custom quotes for distributors & retailers",
-                "Pan-India dispatch and logistics support",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-3">
+                t("inquirySection.bullet1"),
+                t("inquirySection.bullet2"),
+                t("inquirySection.bullet3"),
+              ].map((bulletText) => (
+                <li key={bulletText} className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-gold" />
-                  <span className="text-foreground">{t}</span>
+                  <span className="text-foreground">{bulletText}</span>
                 </li>
               ))}
             </ul>
           </div>
           <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:col-span-3">
-            <InquiryForm />
+            <h2 className="text-2xl font-bold text-foreground">{t("inquirySection.formTitle")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("inquirySection.formDesc")}
+            </p>
+            <div className="mt-6">
+              <InquiryForm />
+            </div>
           </div>
         </div>
       </section>

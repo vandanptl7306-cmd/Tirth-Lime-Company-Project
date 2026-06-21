@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-
-const NAV = [
-  { to: "/", label: "Home" },
-  { to: "/products", label: "Products" },
-  { to: "/quality", label: "Quality & Hygiene" },
-  { to: "/about", label: "About Us" },
-  { to: "/contact", label: "Contact" },
-] as const;
+import { useLanguage } from "@/hooks/useLanguage";
+import { type Language } from "@/lib/translations";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function Logo() {
+  const { t } = useLanguage();
   return (
     <Link to="/" className="flex items-center gap-2 group">
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm">
@@ -21,24 +23,54 @@ function Logo() {
       </div>
       <div className="leading-tight">
         <div className="text-base font-bold text-foreground sm:text-lg">
-          Khodiyar <span className="text-brand-gold">Industry</span>
+          {t("logo.title")} <span className="text-brand-gold">Industry</span>
         </div>
         <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-          Edible Chuna · FSSAI
+          {t("logo.subtitle")}
         </div>
       </div>
     </Link>
   );
 }
 
+function LanguageSelector({ className }: { className?: string }) {
+  const { language, setLanguage } = useLanguage();
+
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
+        <SelectTrigger className="h-9 w-[125px] bg-background">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="en">English</SelectItem>
+          <SelectItem value="gu">ગુજરાતી</SelectItem>
+          <SelectItem value="hi">हिन्दी</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { to: "/", label: t("nav.home") },
+    { to: "/products", label: t("nav.products") },
+    { to: "/quality", label: t("nav.quality") },
+    { to: "/about", label: t("nav.about") },
+    { to: "/contact", label: t("nav.contact") },
+  ] as const;
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Logo />
         <nav className="hidden items-center gap-1 lg:flex">
-          {NAV.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -50,12 +82,13 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-4">
+          <LanguageSelector />
           <Button
             asChild
             className="bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold shadow-sm"
           >
-            <Link to="/contact">Get a Bulk Quote</Link>
+            <Link to="/contact">{t("nav.getQuote")}</Link>
           </Button>
         </div>
 
@@ -80,7 +113,11 @@ export function SiteHeader() {
                 </Button>
               </div>
               <nav className="flex flex-col gap-1">
-                {NAV.map((item) => (
+                <div className="px-3 py-2 border-b border-border/50 mb-3">
+                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Language / ભાષા / भाषा</div>
+                  <LanguageSelector className="w-full" />
+                </div>
+                {NAV_ITEMS.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -97,7 +134,7 @@ export function SiteHeader() {
                   className="mt-4 bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
                 >
                   <Link to="/contact" onClick={() => setOpen(false)}>
-                    Get a Bulk Quote
+                    {t("nav.getQuote")}
                   </Link>
                 </Button>
               </nav>

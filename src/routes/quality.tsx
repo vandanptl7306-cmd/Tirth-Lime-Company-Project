@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/quality")({
   head: () => ({
@@ -31,34 +32,42 @@ export const Route = createFileRoute("/quality")({
   component: QualityPage,
 });
 
-const STEPS = [
-  {
-    icon: FlaskConical,
-    title: "Sourcing & Testing",
-    desc: "Limestone and inputs are sourced from trusted partners and tested for purity before production.",
-  },
-  {
-    icon: Factory,
-    title: "Controlled Manufacturing",
-    desc: "Production happens in a clean, controlled facility with documented food-safety procedures.",
-  },
-  {
-    icon: PackageCheck,
-    title: "Hygienic Packing",
-    desc: "Each batch is packed in sealed, food-grade containers — ready for retail or repacking.",
-  },
-];
-
 function QualityPage() {
+  const { t } = useLanguage();
+
+  const steps = [
+    {
+      icon: FlaskConical,
+      title: t("qualityPage.step1Title"),
+      desc: t("qualityPage.step1Desc"),
+    },
+    {
+      icon: Factory,
+      title: t("qualityPage.step2Title"),
+      desc: t("qualityPage.step2Desc"),
+    },
+    {
+      icon: PackageCheck,
+      title: t("qualityPage.step3Title"),
+      desc: t("qualityPage.step3Desc"),
+    },
+  ];
+
+  const pillars = [
+    { icon: ShieldCheck, title: t("qualityPage.pillar1Title"), desc: t("qualityPage.pillar1Desc") },
+    { icon: Sparkles, title: t("qualityPage.pillar2Title"), desc: t("qualityPage.pillar2Desc") },
+    { icon: Truck, title: t("qualityPage.pillar3Title"), desc: t("qualityPage.pillar3Desc") },
+  ];
+
   return (
     <SiteLayout>
       <section className="bg-secondary/60 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             align="left"
-            eyebrow="Quality & Hygiene"
-            title="Built for food-safety, batch after batch"
-            description="From sourcing to sealing, every step is designed to deliver consistent purity and hygiene."
+            eyebrow={t("qualityPage.eyebrow")}
+            title={t("qualityPage.title")}
+            description={t("qualityPage.desc")}
           />
         </div>
       </section>
@@ -72,28 +81,26 @@ function QualityPage() {
               </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-widest text-amber-900">
-                  Certification
+                  {t("whyChooseUs.certLabel")}
                 </div>
                 <h2 className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">
-                  FSSAI Certified Edible Chuna Manufacturer
+                  {t("qualityPage.certTitle")}
                 </h2>
                 <p className="mt-2 max-w-2xl text-muted-foreground">
-                  We comply with all applicable Food Safety and Standards Authority of
-                  India regulations for edible lime products, ensuring our partners stock a
-                  product they can stand behind.
+                  {t("qualityPage.certDesc")}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {STEPS.map((s, i) => (
+            {steps.map((s, i) => (
               <div
                 key={s.title}
                 className="relative rounded-2xl border border-border bg-card p-6 shadow-sm"
               >
                 <div className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground">
-                  Step {i + 1}
+                  {t("qualityPage.stepLabel")} {i + 1}
                 </div>
                 <div className="mt-2 grid h-12 w-12 place-items-center rounded-xl bg-accent text-primary">
                   <s.icon className="h-6 w-6" />
@@ -105,11 +112,7 @@ function QualityPage() {
           </div>
 
           <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {[
-              { icon: ShieldCheck, title: "Hygiene-first", desc: "Cleaning and sanitation built into daily SOPs." },
-              { icon: Sparkles, title: "Premium inputs", desc: "Quality raw materials, never compromised on cost." },
-              { icon: Truck, title: "Reliable dispatch", desc: "Predictable lead times for repeat distributors." },
-            ].map((p) => (
+            {pillars.map((p) => (
               <div key={p.title} className="rounded-2xl border border-border bg-card p-6">
                 <p.icon className="h-6 w-6 text-brand-gold" />
                 <h4 className="mt-3 text-base font-bold text-foreground">{p.title}</h4>

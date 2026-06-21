@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/site/SectionHeading";
 import { InquiryForm } from "@/components/site/InquiryForm";
 import { ADDRESS, EMAIL, PHONE_DISPLAY, WHATSAPP_NUMBER, buildWaLink } from "@/lib/products";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -27,11 +28,21 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const wa = buildWaLink("Hello Khodiyar Industry, I'd like to discuss a bulk order.");
+  const { t, language } = useLanguage();
+
+  let waDiscussMsg = "Hello Khodiyar Industry, I'd like to discuss a bulk order.";
+  if (language === "gu") {
+    waDiscussMsg = "નમસ્તે ખોડિયાર ઇન્ડસ્ટ્રી, હું જથ્થાબંધ ઓર્ડર વિશે ચર્ચા કરવા માંગુ છું.";
+  } else if (language === "hi") {
+    waDiscussMsg = "नमस्ते खोदियार इंडस्ट्री, मैं थोक ऑर्डर के बारे में चर्चा करना चाहता हूँ।";
+  }
+
+  const wa = buildWaLink(waDiscussMsg);
+
   const contactItems = [
     {
       icon: MessageCircle,
-      label: "WhatsApp",
+      label: t("contactPage.labels.whatsapp"),
       value: PHONE_DISPLAY,
       href: wa,
       external: true,
@@ -39,21 +50,21 @@ function ContactPage() {
     },
     {
       icon: Phone,
-      label: "Phone",
+      label: t("contactPage.labels.phone"),
       value: PHONE_DISPLAY,
       href: `tel:+${WHATSAPP_NUMBER}`,
       external: false,
     },
     {
       icon: Mail,
-      label: "Email",
+      label: t("contactPage.labels.email"),
       value: EMAIL,
       href: `mailto:${EMAIL}`,
       external: false,
     },
     {
       icon: MapPin,
-      label: "Address",
+      label: t("contactPage.labels.address"),
       value: ADDRESS,
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ADDRESS)}`,
       external: true,
@@ -66,9 +77,9 @@ function ContactPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             align="left"
-            eyebrow="Contact"
-            title="Let's talk bulk supply"
-            description="Send an inquiry through the form or reach us directly — we typically respond on WhatsApp within working hours."
+            eyebrow={t("contactPage.eyebrow")}
+            title={t("contactPage.title")}
+            description={t("contactPage.desc")}
           />
         </div>
       </section>
@@ -112,7 +123,7 @@ function ContactPage() {
             >
               <a href={wa} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="mr-2 h-5 w-5" />
-                Chat on WhatsApp now
+                {t("contactPage.chatWhatsApp")}
               </a>
             </Button>
           </div>
@@ -121,9 +132,9 @@ function ContactPage() {
             id="inquiry"
             className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:col-span-3"
           >
-            <h2 className="text-2xl font-bold text-foreground">Bulk Inquiry Form</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("inquirySection.formTitle")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Fill in your details and we'll respond with pricing on WhatsApp.
+              {t("inquirySection.formDesc")}
             </p>
             <div className="mt-6">
               <InquiryForm />

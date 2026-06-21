@@ -6,6 +6,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PRODUCTS, getStoredProducts } from "@/lib/products";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/products")({
   head: () => ({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/products")({
 });
 
 function ProductsPage() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState(PRODUCTS);
 
   useEffect(() => {
@@ -40,9 +42,9 @@ function ProductsPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             align="left"
-            eyebrow="Product Catalog"
-            title="Tirth & Riddhi Siddhi Edible Chuna"
-            description="Six variants designed for wholesalers, distributors and paan-shop vendors. Tap any product to inquire on WhatsApp."
+            eyebrow={t("catalog.eyebrow")}
+            title={t("catalog.title")}
+            description={t("catalog.desc")}
           />
         </div>
       </section>
@@ -59,11 +61,10 @@ function ProductsPage() {
             <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-2xl font-bold sm:text-3xl">
-                  Need a custom bulk quote?
+                  {t("catalog.customQuoteTitle")}
                 </h3>
                 <p className="mt-2 max-w-xl text-primary-foreground/80">
-                  Share your requirement and we'll come back with pricing, packaging
-                  options and dispatch timelines.
+                  {t("catalog.customQuoteDesc")}
                 </p>
               </div>
               <Button
@@ -72,7 +73,7 @@ function ProductsPage() {
                 className="bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
               >
                 <Link to="/contact">
-                  Get a Bulk Quote <ArrowRight className="ml-2 h-4 w-4" />
+                  {t("nav.getQuote")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
