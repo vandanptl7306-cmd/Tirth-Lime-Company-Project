@@ -35,7 +35,9 @@ import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { PRODUCTS, getStoredProducts, saveStoredProducts, type Product } from "@/lib/products";
+import { getStoredGallery, saveStoredGallery, type GallerySlide } from "@/lib/gallery";
 import { toast } from "sonner";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -134,14 +136,65 @@ const MOCK_SALES: Sale[] = [
   },
 ];
 
+type CustomTooltipProps = {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+};
+
+const CustomChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/98 backdrop-blur-md border border-slate-700/50 p-3.5 rounded-2xl shadow-xl text-xs space-y-1.5 select-none text-white transition-all">
+        {label && <p className="font-bold opacity-80 uppercase tracking-wider text-[10px]">{label}</p>}
+        {payload.map((item: any, idx: number) => {
+          const isCurrency = !item.name.toLowerCase().includes("qty") && 
+                             !item.name.toLowerCase().includes("volume") && 
+                             !item.name.toLowerCase().includes("orders") &&
+                             !item.name.toLowerCase().includes("status") &&
+                             !item.name.toLowerCase().includes("completed") &&
+                             !item.name.toLowerCase().includes("pending");
+          return (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full border border-white/10" style={{ backgroundColor: item.color || item.fill || 'var(--brand-blue)' }} />
+              <span className="font-medium text-slate-300">{item.name}:</span>
+              <span className="font-black text-white">
+                {isCurrency ? `₹${Number(item.value).toLocaleString("en-IN")}` : Number(item.value).toLocaleString("en-IN")}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return null;
+};
+
 function AdminDashboard() {
+  const { t } = useLanguage();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeTab, setActiveTab] = useState<"sales" | "products">("sales");
+  const [activeTab, setActiveTab] = useState<"sales" | "products" | "gallery">("sales");
+  const [timeRange, setTimeRange] = useState<"7days" | "30days" | "all">("all");
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
   const [deleteSaleConfirm, setDeleteSaleConfirm] = useState<string | null>(null);
+
+  // Gallery management states
+  const [gallery, setGallery] = useState<GallerySlide[]>([]);
+  const [showAddSlideModal, setShowAddSlideModal] = useState(false);
+  const [editingSlide, setEditingSlide] = useState<GallerySlide | null>(null);
+  const [deleteSlideConfirm, setDeleteSlideConfirm] = useState<string | null>(null);
+
+  // Form states for gallery slides
+  const [slideImg, setSlideImg] = useState("");
+  const [slideEnTitle, setSlideEnTitle] = useState("");
+  const [slideGuTitle, setSlideGuTitle] = useState("");
+  const [slideHiTitle, setSlideHiTitle] = useState("");
+  const [slideEnDesc, setSlideEnDesc] = useState("");
+  const [slideGuDesc, setSlideGuDesc] = useState("");
+  const [slideHiDesc, setSlideHiDesc] = useState("");
 
   // Form states for product management
   const [prodName, setProdName] = useState("");
@@ -174,6 +227,7 @@ function AdminDashboard() {
   useEffect(() => {
     setMounted(true);
     setProducts(getStoredProducts());
+    setGallery(getStoredGallery());
     const stored = localStorage.getItem("khodiyar_sales_data");
     if (stored) {
       try {
@@ -347,6 +401,75 @@ function AdminDashboard() {
     setDeleteProductConfirm(id);
   };
 
+  // Gallery Management helpers
+  const saveGallery = (newGallery: GallerySlide[]) => {
+    setGallery(newGallery);
+    saveStoredGallery(newGallery);
+  };
+
+  const resetSlideForm = () => {
+    setEditingSlide(null);
+    setSlideImg("");
+    setSlideEnTitle("");
+    setSlideGuTitle("");
+    setSlideHiTitle("");
+    setSlideEnDesc("");
+    setSlideGuDesc("");
+    setSlideHiDesc("");
+  };
+
+  const handleAddOrEditSlide = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slideImg || !slideEnTitle) {
+      alert("Image and English title are required.");
+      return;
+    }
+
+    const updatedSlide: GallerySlide = {
+      id: editingSlide ? editingSlide.id : "slide_" + Date.now(),
+      img: slideImg,
+      title: {
+        en: slideEnTitle,
+        gu: slideGuTitle || slideEnTitle,
+        hi: slideHiTitle || slideEnTitle,
+      },
+      desc: {
+        en: slideEnDesc,
+        gu: slideGuDesc || slideEnDesc,
+        hi: slideHiDesc || slideEnDesc,
+      }
+    };
+
+    let newGalleryList: GallerySlide[];
+    if (editingSlide) {
+      newGalleryList = gallery.map((s) => (s.id === editingSlide.id ? updatedSlide : s));
+      toast.success("Gallery slide updated successfully!");
+    } else {
+      newGalleryList = [...gallery, updatedSlide];
+      toast.success("New gallery slide added successfully!");
+    }
+
+    saveGallery(newGalleryList);
+    setShowAddSlideModal(false);
+    resetSlideForm();
+  };
+
+  const handleEditSlideClick = (slide: GallerySlide) => {
+    setEditingSlide(slide);
+    setSlideImg(slide.img);
+    setSlideEnTitle(slide.title.en);
+    setSlideGuTitle(slide.title.gu);
+    setSlideHiTitle(slide.title.hi);
+    setSlideEnDesc(slide.desc.en);
+    setSlideGuDesc(slide.desc.gu);
+    setSlideHiDesc(slide.desc.hi);
+    setShowAddSlideModal(true);
+  };
+
+  const handleDeleteSlideClick = (id: string) => {
+    setDeleteSlideConfirm(id);
+  };
+
   // Excel CSV exporter
   const handleExportExcelCSV = () => {
     try {
@@ -401,20 +524,32 @@ function AdminDashboard() {
     }
   };
 
+  // Filter sales by timeRange first
+  const statsSales = sales.filter((s) => {
+    if (timeRange === "all") return true;
+    const saleDate = new Date(s.date);
+    const baselineDate = new Date("2026-06-21");
+    const diffTime = baselineDate.getTime() - saleDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    if (timeRange === "7days") return diffDays >= 0 && diffDays <= 7;
+    if (timeRange === "30days") return diffDays >= 0 && diffDays <= 30;
+    return true;
+  });
+
   // Calculate metrics
-  const totalSales = sales.reduce((acc, curr) => acc + curr.revenue, 0);
-  const doneSales = sales.filter((s) => s.status === "Done").reduce((acc, curr) => acc + curr.revenue, 0);
-  const pendingSales = sales.filter((s) => s.status === "Pending").reduce((acc, curr) => acc + curr.revenue, 0);
-  const totalOrders = sales.length;
-  const completedOrders = sales.filter((s) => s.status === "Done").length;
-  const pendingOrders = sales.filter((s) => s.status === "Pending").length;
-  const totalQuantity = sales.reduce(
+  const totalSales = statsSales.reduce((acc, curr) => acc + curr.revenue, 0);
+  const doneSales = statsSales.filter((s) => s.status === "Done").reduce((acc, curr) => acc + curr.revenue, 0);
+  const pendingSales = statsSales.filter((s) => s.status === "Pending").reduce((acc, curr) => acc + curr.revenue, 0);
+  const totalOrders = statsSales.length;
+  const completedOrders = statsSales.filter((s) => s.status === "Done").length;
+  const pendingOrders = statsSales.filter((s) => s.status === "Pending").length;
+  const totalQuantity = statsSales.reduce(
     (acc, curr) => acc + curr.items.reduce((sum, item) => sum + item.quantity, 0),
     0
   );
 
   // Prepare chart data (Chronological Growth)
-  const growthData = [...sales]
+  const growthData = [...statsSales]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .reduce((acc: { date: string; revenue: number; cumulative: number }[], curr) => {
       const lastCumulative = acc.length > 0 ? acc[acc.length - 1].cumulative : 0;
@@ -432,12 +567,12 @@ function AdminDashboard() {
 
   // Done vs Pending Pie Chart Data
   const statusPieData = [
-    { name: "Completed", value: completedOrders, color: "#15803d" }, // green-700
-    { name: "Pending", value: pendingOrders, color: "#d97706" }, // amber-600
+    { name: t("admin.completed"), value: completedOrders, color: "#15803d" }, // green-700
+    { name: t("admin.pendingLegend"), value: pendingOrders, color: "#d97706" }, // amber-600
   ];
 
   // Brand sales breakdown (Tirth vs Riddhi Siddhi)
-  const brandBreakdown = sales.reduce(
+  const brandBreakdown = statsSales.reduce(
     (acc: { [key: string]: number }, curr) => {
       curr.items.forEach((item) => {
         const brand = item.product.startsWith("Tirth") ? "Tirth Brand" : "Riddhi Siddhi";
@@ -468,13 +603,13 @@ function AdminDashboard() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <SectionHeading
             align="left"
-            eyebrow="Operations Portal"
+            eyebrow={t("admin.operationsPortal")}
             title={
               <span>
-                Sales & Performance <span className="text-brand-blue">Admin</span>
+                {t("admin.salesPerformance")} <span className="text-brand-blue">{t("admin.adminLabel")}</span>
               </span>
             }
-            description="Manage B2B orders, print bills, and track operations performance."
+            description={t("admin.manageDescription")}
           />
           <div className="flex flex-wrap gap-3 self-start md:self-center">
             <Button
@@ -482,7 +617,7 @@ function AdminDashboard() {
               variant="outline"
               className="border-emerald-600 text-emerald-800 hover:bg-emerald-50 shadow-sm font-semibold flex items-center gap-1.5"
             >
-              <FileSpreadsheet className="h-4 w-4" /> Export to Excel
+              <FileSpreadsheet className="h-4 w-4" /> {t("admin.exportExcel")}
             </Button>
             <Button
               onClick={() => {
@@ -491,7 +626,7 @@ function AdminDashboard() {
               }}
               className="bg-primary text-primary-foreground hover:bg-brand-blue shadow-md font-semibold"
             >
-              <Plus className="mr-2 h-5 w-5" /> Add Offline Bill
+              <Plus className="mr-2 h-5 w-5" /> {t("admin.addOfflineBill")}
             </Button>
           </div>
         </div>
@@ -510,7 +645,7 @@ function AdminDashboard() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sales Registry & Analytics
+              {t("admin.registryAnalytics")}
             </button>
             <button
               onClick={() => setActiveTab("products")}
@@ -520,83 +655,146 @@ function AdminDashboard() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              Manage Product Catalog
+              {t("admin.manageCatalog")}
+            </button>
+            <button
+              onClick={() => setActiveTab("gallery")}
+              className={`pb-3 text-sm font-bold border-b-2 px-2 transition-all relative ${
+                activeTab === "gallery"
+                  ? "border-brand-blue text-brand-blue"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("admin.manageGallery")}
             </button>
           </div>
 
           {activeTab === "sales" ? (
             <>
+              {/* Time Range Selector */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 bg-card border border-border/80 p-4 rounded-3xl shadow-sm">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <Filter className="h-4 w-4 text-brand-blue" />
+                    {t("admin.timeRangeLabel")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Filter analytics dashboard by dispatch date
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-2xl border border-border/60 w-fit">
+                  <button
+                    onClick={() => setTimeRange("7days")}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      timeRange === "7days"
+                        ? "bg-background text-brand-blue shadow-sm border border-border/30"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t("admin.last7Days")}
+                  </button>
+                  <button
+                    onClick={() => setTimeRange("30days")}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      timeRange === "30days"
+                        ? "bg-background text-brand-blue shadow-sm border border-border/30"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t("admin.last30Days")}
+                  </button>
+                  <button
+                    onClick={() => setTimeRange("all")}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      timeRange === "all"
+                        ? "bg-background text-brand-blue shadow-sm border border-border/30"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t("admin.allTime")}
+                  </button>
+                </div>
+              </div>
+
               {/* STATS CARDS */}
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Total Revenue</span>
-                <span className="text-2xl font-black text-foreground mt-1 block">
-                  ₹{totalSales.toLocaleString("en-IN")}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-semibold mt-1 inline-flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" /> Healthy pipeline
-                </span>
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
-                <Coins className="h-6 w-6" />
-              </div>
-            </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Card 1: Total Revenue */}
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-card/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex items-center justify-between group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-gold to-yellow-500" />
+                  <div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("admin.totalRevenue")}</span>
+                    <span className="text-3xl font-black text-foreground mt-1.5 block tracking-tight group-hover:text-brand-blue transition-colors">
+                      ₹{totalSales.toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-[10px] text-emerald-600 font-semibold mt-2 inline-flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> {t("admin.healthyPipeline")}
+                    </span>
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <Coins className="h-6 w-6" />
+                  </div>
+                </div>
 
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Completed Orders</span>
-                <span className="text-2xl font-black text-foreground mt-1 block">
-                  {completedOrders} <span className="text-sm font-normal text-muted-foreground">/ {totalOrders}</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground mt-1 block">
-                  ₹{doneSales.toLocaleString("en-IN")} total value
-                </span>
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-            </div>
+                {/* Card 2: Completed Orders */}
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-card/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex items-center justify-between group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
+                  <div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("admin.completedOrders")}</span>
+                    <span className="text-3xl font-black text-foreground mt-1.5 block tracking-tight group-hover:text-emerald-700 transition-colors">
+                      {completedOrders} <span className="text-sm font-normal text-muted-foreground">/ {totalOrders}</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground mt-2 block">
+                      ₹{doneSales.toLocaleString("en-IN")} {t("admin.totalValue")}
+                    </span>
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                </div>
 
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Pending Orders</span>
-                <span className="text-2xl font-black text-foreground mt-1 block">
-                  {pendingOrders} <span className="text-sm font-normal text-muted-foreground">/ {totalOrders}</span>
-                </span>
-                <span className="text-[10px] text-amber-600 font-medium mt-1 block">
-                  ₹{pendingSales.toLocaleString("en-IN")} pending collection
-                </span>
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Clock className="h-6 w-6" />
-              </div>
-            </div>
+                {/* Card 3: Pending Orders */}
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-card/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex items-center justify-between group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-600" />
+                  <div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("admin.pendingOrders")}</span>
+                    <span className="text-3xl font-black text-foreground mt-1.5 block tracking-tight group-hover:text-amber-600 transition-colors">
+                      {pendingOrders} <span className="text-sm font-normal text-muted-foreground">/ {totalOrders}</span>
+                    </span>
+                    <span className="text-[10px] text-amber-600 font-medium mt-2 block">
+                      ₹{pendingSales.toLocaleString("en-IN")} {t("admin.pendingCollection")}
+                    </span>
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                </div>
 
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Total Volume Sold</span>
-                <span className="text-2xl font-black text-foreground mt-1 block">
-                  {totalQuantity} <span className="text-sm font-normal text-muted-foreground">Parcels</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground mt-1 block">
-                  Across both brand families
-                </span>
+                {/* Card 4: Total Volume Sold */}
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-card/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex items-center justify-between group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-blue to-cyan-600" />
+                  <div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("admin.totalVolumeSold")}</span>
+                    <span className="text-3xl font-black text-foreground mt-1.5 block tracking-tight group-hover:text-brand-blue transition-colors">
+                      {totalQuantity} <span className="text-sm font-normal text-muted-foreground">{t("admin.parcels")}</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground mt-2 block">
+                      {t("admin.acrossBrands")}
+                    </span>
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <Package className="h-6 w-6" />
+                  </div>
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center">
-                <Package className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
 
           {/* CHARTS CONTAINER */}
           {mounted ? (
             <div className="mt-12 grid gap-6 lg:grid-cols-3">
               {/* Line/Area Growth Chart */}
-              <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between">
+              <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Cumulative Sales Growth</h3>
-                  <p className="text-xs text-muted-foreground">Timeline progress based on recorded orders</p>
+                  <h3 className="text-lg font-bold text-foreground">{t("admin.cumulativeGrowth")}</h3>
+                  <p className="text-xs text-muted-foreground">{t("admin.growthDescription")}</p>
                 </div>
                 <div className="h-72 w-full mt-6">
                   {growthData.length > 0 ? (
@@ -604,19 +802,20 @@ function AdminDashboard() {
                       <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--brand-blue)" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="var(--brand-blue)" stopOpacity={0} />
+                            <stop offset="5%" stopColor="var(--brand-blue)" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="var(--brand-blue)" stopOpacity={0.01} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0.01 255)" />
                         <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="oklch(0.5 0.03 260)" />
                         <YAxis tickFormatter={(val) => `₹${val / 1000}k`} tick={{ fontSize: 10 }} stroke="oklch(0.5 0.03 260)" />
-                        <Tooltip formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "Cumulative Revenue"]} />
+                        <Tooltip content={<CustomChartTooltip />} />
                         <Area
                           type="monotone"
                           dataKey="cumulative"
+                          name={t("admin.totalRevenue")}
                           stroke="var(--brand-blue)"
-                          strokeWidth={2}
+                          strokeWidth={2.5}
                           fillOpacity={1}
                           fill="url(#colorCumulative)"
                         />
@@ -624,7 +823,7 @@ function AdminDashboard() {
                     </ResponsiveContainer>
                   ) : (
                     <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-                      No sales data available to show growth chart.
+                      {t("admin.noSalesData")}
                     </div>
                   )}
                 </div>
@@ -633,16 +832,17 @@ function AdminDashboard() {
               {/* Pie Chart & Bar Chart Stack */}
               <div className="grid gap-6 lg:col-span-1">
                 {/* Done vs Pending Pie */}
-                <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between">
+                <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md">
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">Order Status Ratio</h3>
-                    <p className="text-xs text-muted-foreground">Completed vs pending orders</p>
+                    <h3 className="text-lg font-bold text-foreground">{t("admin.orderStatusRatio")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("admin.completedPendingDesc")}</p>
                   </div>
                   <div className="h-44 w-full relative flex items-center justify-center mt-4">
                     {totalOrders > 0 ? (
                       <>
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
+                            <Tooltip content={<CustomChartTooltip />} />
                             <Pie
                               data={statusPieData}
                               cx="50%"
@@ -658,45 +858,51 @@ function AdminDashboard() {
                             </Pie>
                           </PieChart>
                         </ResponsiveContainer>
-                        <div className="absolute text-center">
+                        <div className="absolute text-center pointer-events-none select-none">
                           <span className="text-2xl font-black text-foreground block">
                             {Math.round((completedOrders / (totalOrders || 1)) * 100)}%
                           </span>
                           <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">
-                            Completed
+                            {t("admin.completed")}
                           </span>
                         </div>
                       </>
                     ) : (
-                      <span className="text-sm text-muted-foreground">No data available</span>
+                      <span className="text-sm text-muted-foreground">{t("admin.noDataAvailable")}</span>
                     )}
                   </div>
                   <div className="flex justify-center gap-6 mt-2 text-xs">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-emerald-700 block" />
-                      <span className="text-muted-foreground">Done ({completedOrders})</span>
+                      <span className="text-muted-foreground">{t("admin.doneLegend")} ({completedOrders})</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-amber-600 block" />
-                      <span className="text-muted-foreground">Pending ({pendingOrders})</span>
+                      <span className="text-muted-foreground">{t("admin.pendingLegend")} ({pendingOrders})</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Brand breakdown bar chart */}
-                <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between">
+                <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md">
                   <div>
-                    <h3 className="text-base font-bold text-foreground">Revenue by Brand</h3>
-                    <p className="text-xs text-muted-foreground">Tirth vs Riddhi Siddhi sales performance</p>
+                    <h3 className="text-base font-bold text-foreground">{t("admin.revenueByBrand")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("admin.brandPerformanceDesc")}</p>
                   </div>
                   <div className="h-32 w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={brandChartData} layout="vertical" margin={{ left: -10, right: 10 }}>
+                        <defs>
+                          <linearGradient id="colorBrandGold" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#b45309" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="var(--brand-gold)" stopOpacity={1} />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="oklch(0.92 0.01 255)" />
                         <XAxis type="number" tickFormatter={(val) => `₹${val / 1000}k`} tick={{ fontSize: 10 }} stroke="oklch(0.5 0.03 260)" />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} stroke="oklch(0.5 0.03 260)" />
-                        <Tooltip formatter={(value: number) => `₹${value.toLocaleString("en-IN")}`} />
-                        <Bar dataKey="revenue" fill="var(--brand-gold)" radius={[0, 4, 4, 0]} />
+                        <Tooltip content={<CustomChartTooltip />} />
+                        <Bar dataKey="revenue" name={t("admin.totalRevenue")} fill="url(#colorBrandGold)" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -713,8 +919,8 @@ function AdminDashboard() {
           <div className="mt-12 rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-bold text-foreground">Sales Registry</h3>
-                <p className="text-xs text-muted-foreground">Manage, print bills and edit logs</p>
+                <h3 className="text-xl font-bold text-foreground">{t("admin.salesRegistry")}</h3>
+                <p className="text-xs text-muted-foreground">{t("admin.manageLogs")}</p>
               </div>
 
               {/* FILTER / SEARCH */}
@@ -722,7 +928,7 @@ function AdminDashboard() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search company or product..."
+                    placeholder={t("admin.searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="h-9 rounded-lg border border-border bg-background pl-3 pr-8 text-xs focus:outline-none focus:border-brand-gold/60 w-48 sm:w-56"
@@ -738,9 +944,9 @@ function AdminDashboard() {
                     onChange={(e) => setFilterStatus(e.target.value as any)}
                     className="text-xs px-2 h-full focus:outline-none bg-transparent"
                   >
-                    <option value="All">All Statuses</option>
-                    <option value="Done">Completed Only</option>
-                    <option value="Pending">Pending Only</option>
+                    <option value="All">{t("admin.allStatuses")}</option>
+                    <option value="Done">{t("admin.completedOnly")}</option>
+                    <option value="Pending">{t("admin.pendingOnly")}</option>
                   </select>
                 </div>
               </div>
@@ -751,14 +957,14 @@ function AdminDashboard() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-border bg-secondary/5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                    <th className="p-4">Date</th>
-                    <th className="p-4">Company Name</th>
-                    <th className="p-4">Product details</th>
-                    <th className="p-4 text-center">Pack Size</th>
-                    <th className="p-4 text-right">Quantity</th>
-                    <th className="p-4 text-right">Total Revenue</th>
-                    <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-center">Actions</th>
+                    <th className="p-4">{t("admin.date")}</th>
+                    <th className="p-4">{t("admin.companyName")}</th>
+                    <th className="p-4">{t("admin.productDetails")}</th>
+                    <th className="p-4 text-center">{t("admin.packSize")}</th>
+                    <th className="p-4 text-right">{t("admin.quantity")}</th>
+                    <th className="p-4 text-right">{t("admin.totalRevenue")}</th>
+                    <th className="p-4 text-center">{t("admin.status")}</th>
+                    <th className="p-4 text-center">{t("admin.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
@@ -811,7 +1017,7 @@ function AdminDashboard() {
                             }`}
                           >
                             <span className={`h-1.5 w-1.5 rounded-full ${s.status === "Done" ? "bg-emerald-600" : "bg-amber-600"}`} />
-                            {s.status}
+                            {s.status === "Done" ? t("admin.paid") : t("admin.unpaid")}
                           </button>
                         </td>
                         <td className="p-4 text-center">
@@ -821,7 +1027,7 @@ function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-brand-blue hover:bg-brand-blue/10 hover:text-brand-blue rounded-lg"
-                              title="Print Invoice / Bill"
+                              title={t("admin.printInvoice")}
                             >
                               <Printer className="h-4 w-4" />
                             </Button>
@@ -830,7 +1036,7 @@ function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
-                              title="Delete record"
+                              title={t("admin.delete")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -841,7 +1047,7 @@ function AdminDashboard() {
                   ) : (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-muted-foreground text-sm">
-                        No transactions match the search filters.
+                        {t("admin.noRecords")}
                       </td>
                     </tr>
                   )}
@@ -850,13 +1056,13 @@ function AdminDashboard() {
             </div>
           </div>
         </>
-      ) : (
+      ) : activeTab === "products" ? (
             /* PRODUCT CATALOG MANAGEMENT UI */
             <div className="mt-6 rounded-3xl border border-border bg-card shadow-sm overflow-hidden animate-fade-in">
               <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Product Inventory</h3>
-                  <p className="text-xs text-muted-foreground">Manage edible chuna brand catalog, packaging, and minimum orders</p>
+                  <h3 className="text-xl font-bold text-foreground">{t("admin.catalogManagement")}</h3>
+                  <p className="text-xs text-muted-foreground">{t("admin.catalogDesc")}</p>
                 </div>
                 <Button
                   onClick={() => {
@@ -865,7 +1071,7 @@ function AdminDashboard() {
                   }}
                   className="bg-primary text-primary-foreground hover:bg-brand-blue shadow-md font-semibold self-start sm:self-center"
                 >
-                  <Plus className="mr-2 h-5 w-5" /> Add New Product
+                  <Plus className="mr-2 h-5 w-5" /> {t("admin.addNewProduct")}
                 </Button>
               </div>
 
@@ -874,13 +1080,13 @@ function AdminDashboard() {
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
                     <tr className="border-b border-border bg-secondary/5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                      <th className="p-4 w-20">Photo</th>
-                      <th className="p-4">Product Name</th>
-                      <th className="p-4">Pack / Variant</th>
-                      <th className="p-4 text-center">Color Category</th>
-                      <th className="p-4">Description</th>
-                      <th className="p-4 text-center">Min Qty</th>
-                      <th className="p-4 text-center">Actions</th>
+                      <th className="p-4 w-20">{t("admin.productImage")}</th>
+                      <th className="p-4">{t("admin.productBrandName")}</th>
+                      <th className="p-4">{t("admin.packDetails")}</th>
+                      <th className="p-4 text-center">{t("admin.colorFamily")}</th>
+                      <th className="p-4">{t("admin.taglineDesc")}</th>
+                      <th className="p-4 text-center">{t("admin.defaultMinQty")}</th>
+                      <th className="p-4 text-center">{t("admin.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -906,12 +1112,12 @@ function AdminDashboard() {
                                 ? "bg-secondary text-primary border-border"
                                 : "bg-blue-50 text-blue-800 border-blue-200"
                             }`}>
-                              {p.color}
+                              {p.color === "yellow" ? t("catalog.colors.yellow") : p.color === "white" ? t("catalog.colors.white") : p.color}
                             </span>
                           </td>
                           <td className="p-4 text-xs text-muted-foreground max-w-xs truncate" title={p.tag}>{p.tag}</td>
                           <td className="p-4 text-center font-bold text-xs text-foreground">
-                            {p.minQuantity !== undefined ? `${p.minQuantity} Boxes` : "None"}
+                            {p.minQuantity !== undefined ? `${p.minQuantity} ${t("admin.parcels")}` : "None"}
                           </td>
                           <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
@@ -920,7 +1126,7 @@ function AdminDashboard() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-brand-blue hover:bg-brand-blue/10 hover:text-brand-blue rounded-lg"
-                                title="Edit Product"
+                                title={t("admin.editDetails")}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -931,7 +1137,7 @@ function AdminDashboard() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
-                                title="Delete Product"
+                                title={t("admin.delete")}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -942,7 +1148,101 @@ function AdminDashboard() {
                     ) : (
                       <tr>
                         <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
-                          No products found in catalog. Add a new one to begin.
+                          {t("admin.noRecords")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* GALLERY SLIDES MANAGEMENT UI */
+            <div className="mt-6 rounded-3xl border border-border bg-card shadow-sm overflow-hidden animate-fade-in">
+              <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">{t("admin.manageGallery")}</h3>
+                  <p className="text-xs text-muted-foreground">Add, edit, or remove photos in the About page slideshow gallery.</p>
+                </div>
+                <Button
+                  onClick={() => {
+                    resetSlideForm();
+                    setShowAddSlideModal(true);
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-brand-blue shadow-md font-semibold self-start sm:self-center"
+                >
+                  <Plus className="mr-2 h-5 w-5" /> {t("admin.addNewSlide")}
+                </Button>
+              </div>
+
+              {/* TABLE */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                      <th className="p-4 w-20">Photo</th>
+                      <th className="p-4">Title (English / translation)</th>
+                      <th className="p-4">Description</th>
+                      <th className="p-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {gallery.length > 0 ? (
+                      gallery.map((slide) => (
+                        <tr key={slide.id} className="hover:bg-secondary/15 transition-colors">
+                          <td className="p-4">
+                            <div className="h-12 w-16 rounded-xl overflow-hidden border border-border bg-secondary">
+                              <img
+                                src={slide.img}
+                                alt="Slide"
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="font-bold text-foreground">{slide.title.en}</div>
+                            <div className="text-[10px] text-muted-foreground space-y-0.5 mt-0.5">
+                              <div>ગુજ: {slide.title.gu}</div>
+                              <div>हिन्दी: {slide.title.hi}</div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-xs text-muted-foreground max-w-sm truncate" title={slide.desc.en}>
+                            <div>{slide.desc.en}</div>
+                            <div className="text-[10px] text-muted-foreground/75 space-y-0.5 mt-0.5">
+                              <div>ગુજ: {slide.desc.gu}</div>
+                              <div>हिन्दी: {slide.desc.hi}</div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Button
+                                onClick={() => handleEditSlideClick(slide)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-brand-blue hover:bg-brand-blue/10 hover:text-brand-blue rounded-lg"
+                                title={t("admin.editDetails")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                </svg>
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteSlideClick(slide.id)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                                title={t("admin.delete")}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">
+                          {t("admin.noRecords")}
                         </td>
                       </tr>
                     )}
@@ -959,15 +1259,15 @@ function AdminDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-card w-full max-w-2xl rounded-3xl border border-border p-6 shadow-2xl relative max-h-[90vh] flex flex-col justify-between overflow-hidden animate-scale-in">
             <div>
-              <h3 className="text-xl font-bold text-foreground">Record Offline Bill / Sale</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Add multiple products, prices, and build invoice</p>
+              <h3 className="text-xl font-bold text-foreground">{t("admin.logBillTitle")}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("admin.logBillDesc")}</p>
             </div>
 
             <form onSubmit={handleAddSale} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                    <Building className="h-3 w-3" /> Company / Buyer Name
+                    <Building className="h-3 w-3" /> {t("admin.customerName")}
                   </label>
                   <input
                     type="text"
@@ -981,7 +1281,7 @@ function AdminDashboard() {
 
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Dispatch Date
+                    <Calendar className="h-3 w-3" /> {t("admin.dispatchDate")}
                   </label>
                   <input
                     type="date"
@@ -997,7 +1297,7 @@ function AdminDashboard() {
               <div className="border-t border-border pt-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                    <Layers className="h-3.5 w-3.5" /> Items Details (Multiple Products)
+                    <Layers className="h-3.5 w-3.5" /> {t("admin.orderedProducts")}
                   </span>
                   <Button
                     type="button"
@@ -1005,7 +1305,7 @@ function AdminDashboard() {
                     size="sm"
                     className="h-8 bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20 hover:text-brand-blue text-xs font-semibold"
                   >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Product
+                    <Plus className="mr-1 h-3.5 w-3.5" /> {t("admin.addProductBtn")}
                   </Button>
                 </div>
 
@@ -1013,14 +1313,14 @@ function AdminDashboard() {
                   {formItems.map((item, idx) => (
                     <div key={idx} className="flex flex-col sm:flex-row gap-3 border border-border/80 bg-secondary/10 p-3 rounded-xl items-end relative">
                       <div className="flex-1 grid gap-1 w-full">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Product</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">{t("admin.productDetails")}</label>
                         <select
                           required
                           value={item.product}
                           onChange={(e) => handleItemChange(idx, "product", e.target.value)}
                           className="h-9 rounded-lg border border-border px-2 text-xs focus:outline-none focus:border-brand-gold/60 bg-background w-full"
                         >
-                          <option value="" disabled>Select Product</option>
+                          <option value="" disabled>{t("admin.selectProduct")}</option>
                           {products.map((p) => (
                             <option key={p.id} value={`${p.name} (${p.variant})`}>
                               {p.name} — {p.variant}
@@ -1030,7 +1330,7 @@ function AdminDashboard() {
                       </div>
 
                       <div className="grid gap-1 w-full sm:w-28">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Pack Config</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">{t("admin.packSize")}</label>
                         <select
                           value={item.packSize}
                           onChange={(e) => handleItemChange(idx, "packSize", e.target.value)}
@@ -1042,7 +1342,7 @@ function AdminDashboard() {
                       </div>
 
                       <div className="grid gap-1 w-full sm:w-16">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Qty</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">{t("admin.quantity")}</label>
                         <input
                           type="number"
                           required
@@ -1055,7 +1355,7 @@ function AdminDashboard() {
                       </div>
 
                       <div className="grid gap-1 w-full sm:w-20">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Price (₹)</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">{t("admin.pricePerBox")}</label>
                         <input
                           type="number"
                           required
@@ -1068,7 +1368,7 @@ function AdminDashboard() {
                       </div>
 
                       <div className="grid gap-1 w-full sm:w-24 text-right pr-2">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase block text-right">Subtotal</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase block text-right">{t("admin.subtotalLabel")}</label>
                         <span className="h-9 flex items-center justify-end text-xs font-black text-foreground">
                           ₹{(item.total || 0).toLocaleString("en-IN")}
                         </span>
@@ -1079,7 +1379,7 @@ function AdminDashboard() {
                           type="button"
                           onClick={() => handleRemoveItemRow(idx)}
                           className="h-9 w-9 border border-destructive/20 text-destructive hover:bg-destructive/10 rounded-lg flex items-center justify-center shrink-0 self-end"
-                          title="Remove item"
+                          title={t("admin.delete")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1092,7 +1392,7 @@ function AdminDashboard() {
               {/* FOOTER ACTIONS */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-border pt-4">
                 <div className="flex gap-4 h-10 items-center">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status: </label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("admin.status")}: </label>
                   <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium">
                     <input
                       type="radio"
@@ -1102,7 +1402,7 @@ function AdminDashboard() {
                       onChange={() => setFormStatus("Pending")}
                       className="accent-brand-blue"
                     />
-                    Pending
+                    {t("admin.pendingStatus")}
                   </label>
                   <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium">
                     <input
@@ -1113,12 +1413,12 @@ function AdminDashboard() {
                       onChange={() => setFormStatus("Done")}
                       className="accent-brand-blue"
                     />
-                    Paid / Done
+                    {t("admin.completedStatus")}
                   </label>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase">Estimated Bill Total</span>
+                  <span className="text-xs font-semibold text-muted-foreground uppercase">{t("admin.grandTotal")}</span>
                   <span className="text-xl font-black text-foreground block">
                     ₹{formItems.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString("en-IN")}
                   </span>
@@ -1132,13 +1432,13 @@ function AdminDashboard() {
                   onClick={() => setShowAddModal(false)}
                   className="font-medium"
                 >
-                  Cancel
+                  {t("admin.cancel")}
                 </Button>
                 <Button
                   type="submit"
                   className="bg-primary text-primary-foreground hover:bg-brand-blue font-semibold"
                 >
-                  Save Record & Bill
+                  {t("admin.saveBill")}
                 </Button>
               </div>
             </form>
@@ -1152,10 +1452,10 @@ function AdminDashboard() {
           <div className="bg-card w-full max-w-lg rounded-3xl border border-border p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden animate-scale-in">
             <div>
               <h3 className="text-xl font-bold text-foreground">
-                {editingProduct ? "Edit Product Details" : "Add New Product"}
+                {editingProduct ? t("admin.editProductTitle") : t("admin.addProductTitle")}
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Define catalog features, upload high-quality product photo, and specify min order limits
+                {editingProduct ? t("admin.updateCatalogDesc") : t("admin.addNewProductDesc")}
               </p>
             </div>
 
@@ -1165,7 +1465,7 @@ function AdminDashboard() {
                 {/* NAME */}
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Product Name
+                    {t("admin.productBrandName")}
                   </label>
                   <input
                     type="text"
@@ -1180,7 +1480,7 @@ function AdminDashboard() {
                 {/* PACK SIZE / VARIANT */}
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Pack Size / Variant
+                    {t("admin.packDetails")}
                   </label>
                   <input
                     type="text"
@@ -1196,22 +1496,22 @@ function AdminDashboard() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="grid gap-1.5">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      Color Category
+                      {t("admin.colorFamily")}
                     </label>
                     <select
                       value={prodColor}
                       onChange={(e) => setProdColor(e.target.value)}
                       className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background w-full"
                     >
-                      <option value="white">White</option>
-                      <option value="yellow">Yellow</option>
+                      <option value="white">{t("admin.whiteTirth")}</option>
+                      <option value="yellow">{t("admin.yellowRiddhi")}</option>
                       <option value="other">Other / Custom</option>
                     </select>
                   </div>
 
                   <div className="grid gap-1.5">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      Min Order Quantity (Boxes)
+                      {t("admin.minWholesaleQty")}
                     </label>
                     <input
                       type="number"
@@ -1244,7 +1544,7 @@ function AdminDashboard() {
                 {/* DESCRIPTION */}
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Short Description / Tagline
+                    {t("admin.taglineDesc")}
                   </label>
                   <input
                     type="text"
@@ -1258,7 +1558,7 @@ function AdminDashboard() {
                 {/* PHOTO UPLOAD */}
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Product Photo
+                    {t("admin.productImage")}
                   </label>
                   <div className="flex gap-4 items-center">
                     <div className="h-20 w-20 rounded-2xl border border-border overflow-hidden bg-secondary shrink-0 relative flex items-center justify-center">
@@ -1303,13 +1603,13 @@ function AdminDashboard() {
                   }}
                   className="font-medium"
                 >
-                  Cancel
+                  {t("admin.cancel")}
                 </Button>
                 <Button
                   type="submit"
                   className="bg-primary text-primary-foreground hover:bg-brand-blue font-semibold"
                 >
-                  {editingProduct ? "Update Product" : "Create Product"}
+                  {editingProduct ? t("admin.saveChanges") : t("admin.addProductBtn")}
                 </Button>
               </div>
             </form>
@@ -1358,7 +1658,7 @@ function AdminDashboard() {
             <button
               onClick={() => setActiveInvoice(null)}
               className="absolute top-4 right-4 h-9 w-9 rounded-full bg-secondary hover:bg-secondary-foreground/10 flex items-center justify-center text-muted-foreground transition-colors print:hidden"
-              title="Close Preview"
+              title={t("admin.close")}
             >
               <X className="h-5 w-5" />
             </button>
@@ -1368,26 +1668,26 @@ function AdminDashboard() {
               <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-4 pb-6 border-b border-border">
                 <div className="leading-tight">
                   <div className="text-2xl font-black text-foreground">
-                    Khodiyar <span className="text-brand-gold">Industry</span>
+                    {t("admin.companyInfoName")}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">
-                    Premium Edible Chuna · FSSAI #20726061900143
+                    {t("admin.licNo")}
                   </div>
                   <p className="text-xs text-muted-foreground mt-3 max-w-xs">
-                    Kachiyavalo Kuvo, Badarkha,<br />Ahmedabad, Gujarat — 387810
+                    {t("admin.addressLabel")}
                   </p>
                 </div>
                 <div className="text-left sm:text-right text-xs text-muted-foreground space-y-1">
-                  <div className="font-bold text-foreground uppercase tracking-wider text-sm mb-1">Tax Invoice / Bill</div>
-                  <div><strong>Invoice No:</strong> INV-2026-{activeInvoice.id.replace("s_", "")}</div>
-                  <div><strong>Date:</strong> {activeInvoice.date}</div>
-                  <div><strong>Terms:</strong> {activeInvoice.status === "Done" ? "PAID (Done)" : "PENDING COLLECTION"}</div>
+                  <div className="font-bold text-foreground uppercase tracking-wider text-sm mb-1">{t("admin.wholesaleInvoice")}</div>
+                  <div><strong>{t("admin.invoiceNo")}</strong> INV-2026-{activeInvoice.id.replace("s_", "")}</div>
+                  <div><strong>{t("admin.dateLabel")}</strong> {activeInvoice.date}</div>
+                  <div><strong>{t("admin.statusLabel")}</strong> {activeInvoice.status === "Done" ? t("admin.paid") : t("admin.unpaid")}</div>
                 </div>
               </div>
 
               {/* Bill To */}
               <div className="py-6 border-b border-border">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Billed To / Buyer</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{t("admin.billTo")}</span>
                 <span className="text-base font-bold text-foreground block mt-1">{activeInvoice.company}</span>
                 <span className="text-xs text-muted-foreground block mt-0.5">B2B Wholesale Customer</span>
               </div>
@@ -1398,11 +1698,11 @@ function AdminDashboard() {
                   <thead>
                     <tr className="border-b border-border/85 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
                       <th className="pb-3 w-8">#</th>
-                      <th className="pb-3">Product Description</th>
-                      <th className="pb-3 text-center">Pack Size</th>
-                      <th className="pb-3 text-right w-16">Qty</th>
-                      <th className="pb-3 text-right w-24">Price (₹)</th>
-                      <th className="pb-3 text-right w-24">Total (₹)</th>
+                      <th className="pb-3">{t("admin.productDetails")}</th>
+                      <th className="pb-3 text-center">{t("admin.packSize")}</th>
+                      <th className="pb-3 text-right w-16">{t("admin.qty")}</th>
+                      <th className="pb-3 text-right w-24">{t("admin.rate")}</th>
+                      <th className="pb-3 text-right w-24">{t("admin.total")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
@@ -1430,7 +1730,7 @@ function AdminDashboard() {
               <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-6">
                 {/* Note */}
                 <div className="text-xs text-muted-foreground max-w-xs space-y-1.5">
-                  <div className="font-bold text-foreground">Declaration & Terms:</div>
+                  <div className="font-bold text-foreground">{t("admin.billOfSupply")}:</div>
                   <p className="leading-relaxed">
                     This bill represents official dispatch records of Khodiyar Industry. Edible chuna products are manufactured under food safety license FSSAI requirements.
                   </p>
@@ -1439,7 +1739,7 @@ function AdminDashboard() {
                 {/* Subtotals */}
                 <div className="w-full sm:w-64 space-y-1.5 text-xs text-right">
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Taxable Value (Subtotal):</span>
+                    <span>{t("admin.subtotalLabel")}:</span>
                     <span>₹{Math.round(activeInvoice.revenue / 1.18).toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
@@ -1451,7 +1751,7 @@ function AdminDashboard() {
                     <span>₹{Math.round((activeInvoice.revenue - Math.round(activeInvoice.revenue / 1.18)) / 2).toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border">
-                    <span>Grand Total (INR):</span>
+                    <span>{t("admin.grandTotal")}:</span>
                     <span>₹{activeInvoice.revenue.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
@@ -1464,13 +1764,13 @@ function AdminDashboard() {
                   variant="outline"
                   className="font-medium"
                 >
-                  Close Preview
+                  {t("admin.close")}
                 </Button>
                 <Button
                   onClick={() => window.print()}
                   className="bg-emerald-700 text-white hover:bg-emerald-800 font-semibold"
                 >
-                  <Printer className="mr-2 h-4 w-4" /> Print Bill
+                  <Printer className="mr-2 h-4 w-4" /> {t("admin.printInvoice")}
                 </Button>
               </div>
 
@@ -1483,7 +1783,7 @@ function AdminDashboard() {
                 <div className="text-right">
                   <p>For, Khodiyar Industry</p>
                   <div className="h-10 w-44 border-b border-muted-foreground mt-4" />
-                  <p className="mt-2 text-[10px]">Authorized Signatory</p>
+                  <p className="mt-2 text-[10px]">{t("admin.authorizedSignatory")}</p>
                 </div>
               </div>
             </div>
@@ -1495,9 +1795,9 @@ function AdminDashboard() {
       {deleteProductConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
-            <h3 className="text-lg font-bold text-foreground">Delete Product</h3>
+            <h3 className="text-lg font-bold text-foreground">{t("admin.deleteProduct")}</h3>
             <p className="text-sm text-muted-foreground mt-2">
-              Are you sure you want to delete this product from the catalog? This action cannot be undone.
+              {t("admin.confirmDeleteProduct")}
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <Button
@@ -1505,7 +1805,7 @@ function AdminDashboard() {
                 onClick={() => setDeleteProductConfirm(null)}
                 className="font-medium"
               >
-                Cancel
+                {t("admin.cancel")}
               </Button>
               <Button
                 onClick={() => {
@@ -1517,7 +1817,7 @@ function AdminDashboard() {
                 }}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
               >
-                Delete
+                {t("admin.delete")}
               </Button>
             </div>
           </div>
@@ -1528,9 +1828,9 @@ function AdminDashboard() {
       {deleteSaleConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
-            <h3 className="text-lg font-bold text-foreground">Delete Sale Record</h3>
+            <h3 className="text-lg font-bold text-foreground">{t("admin.deleteSale")}</h3>
             <p className="text-sm text-muted-foreground mt-2">
-              Are you sure you want to delete this sale transaction? This action cannot be undone.
+              {t("admin.confirmDeleteSale")}
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <Button
@@ -1538,7 +1838,7 @@ function AdminDashboard() {
                 onClick={() => setDeleteSaleConfirm(null)}
                 className="font-medium"
               >
-                Cancel
+                {t("admin.cancel")}
               </Button>
               <Button
                 onClick={() => {
@@ -1549,9 +1849,204 @@ function AdminDashboard() {
                 }}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
               >
-                Delete
+                {t("admin.delete")}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE GALLERY SLIDE CONFIRMATION MODAL */}
+      {deleteSlideConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
+            <h3 className="text-lg font-bold text-foreground">{t("admin.deleteSlide")}</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t("admin.confirmDeleteSlide")}
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteSlideConfirm(null)}
+                className="font-medium"
+              >
+                {t("admin.cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  const updatedGallery = gallery.filter((s) => s.id !== deleteSlideConfirm);
+                  saveGallery(updatedGallery);
+                  toast.success("Gallery slide deleted successfully.");
+                  setDeleteSlideConfirm(null);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+              >
+                {t("admin.delete")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD/EDIT GALLERY SLIDE MODAL */}
+      {showAddSlideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-card w-full max-w-lg rounded-3xl border border-border p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden animate-scale-in">
+            <div>
+              <h3 className="text-xl font-bold text-foreground">
+                {editingSlide ? t("admin.editSlide") : t("admin.addNewSlide")}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Add or edit slides for the About Us photo carousel.
+              </p>
+            </div>
+
+            <form onSubmit={handleAddOrEditSlide} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
+              <div className="grid gap-4">
+                
+                {/* LOCALIZED TITLES (English, Gujarati, Hindi) */}
+                <div className="grid gap-2 p-3 bg-secondary/15 rounded-2xl border border-border/60">
+                  <span className="text-xs font-bold text-primary block uppercase tracking-wider">Slide Titles</span>
+                  
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">English Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Processing Line"
+                      value={slideEnTitle}
+                      onChange={(e) => setSlideEnTitle(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Gujarati Title (ગુજરાતી)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. પ્રોસેસિંગ લાઇન"
+                      value={slideGuTitle}
+                      onChange={(e) => setSlideGuTitle(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Hindi Title (हिन्दी)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. प्रोसेसिंग लाइन"
+                      value={slideHiTitle}
+                      onChange={(e) => setSlideHiTitle(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+                </div>
+
+                {/* LOCALIZED DESCRIPTIONS (English, Gujarati, Hindi) */}
+                <div className="grid gap-2 p-3 bg-secondary/15 rounded-2xl border border-border/60">
+                  <span className="text-xs font-bold text-primary block uppercase tracking-wider">Slide Descriptions</span>
+                  
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">English Description</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Spotless stainless steel processing tanks..."
+                      value={slideEnDesc}
+                      onChange={(e) => setSlideEnDesc(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Gujarati Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ઉત્પાદન સુવિધાની વિગતો..."
+                      value={slideGuDesc}
+                      onChange={(e) => setSlideGuDesc(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Hindi Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. उत्पादन सुविधा का विवरण..."
+                      value={slideHiDesc}
+                      onChange={(e) => setSlideHiDesc(e.target.value)}
+                      className="h-9 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold/60 bg-background"
+                    />
+                  </div>
+                </div>
+
+                {/* PHOTO SOURCE selection */}
+                <div className="grid gap-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("admin.productImage")}
+                  </label>
+                  <div className="flex gap-4 items-center">
+                    <div className="h-20 w-20 rounded-2xl border border-border overflow-hidden bg-secondary shrink-0 relative flex items-center justify-center">
+                      {slideImg ? (
+                        <img src={slideImg} alt="Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground font-bold text-center">No Photo</span>
+                      )}
+                    </div>
+                    <div className="flex-1 grid gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setSlideImg(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary-foreground/10 file:cursor-pointer"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground">OR URL:</span>
+                        <input
+                          type="text"
+                          placeholder="Paste direct image link..."
+                          value={slideImg.startsWith("data:") ? "" : slideImg}
+                          onChange={(e) => setSlideImg(e.target.value)}
+                          className="h-7 rounded-md border border-border px-2 text-[10px] focus:outline-none focus:border-brand-gold/60 bg-background flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddSlideModal(false);
+                    resetSlideForm();
+                  }}
+                  className="font-medium"
+                >
+                  {t("admin.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-brand-blue font-semibold"
+                >
+                  {editingSlide ? t("admin.saveChanges") : t("admin.addNewSlide")}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
