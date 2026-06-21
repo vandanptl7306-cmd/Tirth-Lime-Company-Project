@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { useLanguage } from "@/hooks/useLanguage";
-import { getStoredGallery, type GallerySlide } from "@/lib/gallery";
+import { getStoredGallery, DEFAULT_GALLERY, type GallerySlide } from "@/lib/gallery";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/about")({
 
 function AboutPage() {
   const { t, language } = useLanguage();
-  const [slides, setSlides] = useState<GallerySlide[]>(() => getStoredGallery());
+  const [slides, setSlides] = useState<GallerySlide[]>(DEFAULT_GALLERY);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
