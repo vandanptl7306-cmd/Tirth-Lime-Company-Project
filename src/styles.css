@@ -84,7 +84,27 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+  }
+
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+
+  .lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis-scrolling iframe {
+    pointer-events: none;
   }
 
   body {
@@ -97,5 +117,90 @@
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+
+  /* Split text reveal helper */
+  .word-mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: 0.1em;
+    margin-right: 0.25em;
+  }
+
+  .hero-text-word {
+    display: inline-block;
+    will-change: transform;
+  }
+
+  /* WhatsApp FAB Pulsing Background Rings */
+  @keyframes whatsappPulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+
+  .whatsapp-pulse-ring {
+    animation: whatsappPulse 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  .whatsapp-pulse-ring-delayed {
+    animation: whatsappPulse 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation-delay: 2s;
+  }
+
+  /* Trust Cards Icon Hover transitions */
+  .trust-icon-ShieldCheck,
+  .trust-icon-Sparkles,
+  .trust-icon-Truck {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Shield check rotate on hover */
+  .trust-card:hover .trust-icon-ShieldCheck {
+    transform: scale(1.1) rotate(10deg);
+  }
+
+  /* Sparkles bounce on hover */
+  .trust-card:hover .trust-icon-Sparkles {
+    transform: scale(1.1) translateY(-3px);
+  }
+
+  /* Truck shift forward on hover */
+  .trust-card:hover .trust-icon-Truck {
+    transform: scale(1.08) translateX(5px);
+  }
+
+  /* SVG line focus animation for input fields */
+  .input-focus-line {
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .input-wrapper:focus-within .input-focus-line {
+    stroke-dashoffset: 0;
+  }
+
+  /* Button Sheen Shimmer Animation */
+  @keyframes sheen {
+    0% {
+      transform: translateX(-150%) skewX(-12deg);
+    }
+    15% {
+      transform: translateX(350%) skewX(-12deg);
+    }
+    100% {
+      transform: translateX(350%) skewX(-12deg);
+    }
+  }
+
+  .btn-sheen {
+    animation: sheen 5s ease-in-out infinite;
   }
 }

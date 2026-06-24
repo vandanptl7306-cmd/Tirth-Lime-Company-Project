@@ -7,6 +7,7 @@ import { SectionHeading } from "@/components/site/SectionHeading";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PRODUCTS, getStoredProducts } from "@/lib/products";
 import { useLanguage } from "@/hooks/useLanguage";
+import gsap from "gsap";
 
 export const Route = createFileRoute("/products")({
   head: () => ({
@@ -35,6 +36,32 @@ function ProductsPage() {
   useEffect(() => {
     setProducts(getStoredProducts());
   }, []);
+
+  useEffect(() => {
+    if (products.length === 0) return;
+    
+    const ctx = gsap.context(() => {
+      // Staggered matrix cascade grid reveal for products page load
+      gsap.fromTo(
+        ".product-card-reveal",
+        { opacity: 0, y: 40, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          stagger: {
+            amount: 0.4,
+            grid: "auto",
+            from: "start"
+          },
+          ease: "power4.out",
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, [products]);
 
   return (
     <SiteLayout>

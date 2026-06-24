@@ -28,7 +28,7 @@ export function ProductCard({ product }: { product: Product }) {
   const displayColor = t(`catalog.colors.${product.color}`);
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:border-brand-gold/60 hover:shadow-xl">
+    <article className="product-card-reveal opacity-0 group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-[6px] hover:border-brand-gold/60 hover:shadow-2xl">
       <div className="relative aspect-square overflow-hidden bg-secondary">
         <img
           src={product.image}
@@ -36,7 +36,7 @@ export function ProductCard({ product }: { product: Product }) {
           loading="lazy"
           width={1024}
           height={1024}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="product-image h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
         />
         <span
           className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${colorBadge}`}
@@ -62,7 +62,7 @@ export function ProductCard({ product }: { product: Product }) {
         )}
         <Button
           asChild
-          className="mt-auto justify-between bg-primary text-primary-foreground hover:bg-brand-blue"
+          className="product-inquire-btn mt-auto justify-between bg-primary text-primary-foreground transition-colors duration-500 group-hover:bg-brand-blue group-hover:text-primary-foreground"
         >
           <a href={href} target="_blank" rel="noopener noreferrer">
             {t("catalog.inquireNow")} <ArrowUpRight className="h-4 w-4" />

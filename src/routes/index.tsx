@@ -23,6 +23,11 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
+import { IngredientsSection } from "@/components/site/IngredientsSection";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,6 +48,16 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
+
+const renderSplitText = (text: string) => {
+  return text.split(" ").map((word, i) => (
+    <span key={i} className="word-mask">
+      <span className="hero-text-word">
+        {word}
+      </span>
+    </span>
+  ));
+};
 
 function Home() {
   const { t, language } = useLanguage();
@@ -71,19 +86,269 @@ function Home() {
     setProducts(getStoredProducts());
   }, []);
 
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+
+    // Calculate rotation angles (max 10 degrees tilt)
+    const rotateX = -(y / (rect.height / 2)) * 10;
+    const rotateY = (x / (rect.width / 2)) * 10;
+
+    // Parallax sub-elements moving at different depths for premium feel
+    gsap.to(container.querySelector(".hero-jar-left"), {
+      rotateX: rotateX * 0.8,
+      rotateY: rotateY * 0.8,
+      x: x * 0.04,
+      y: y * 0.04,
+      duration: 0.8,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+
+    gsap.to(container.querySelector(".hero-jar-right"), {
+      rotateX: rotateX * 1.2,
+      rotateY: rotateY * 1.2,
+      x: x * 0.07,
+      y: y * 0.07,
+      duration: 0.8,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  };
+
+  const handleHeroMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    gsap.to(container.querySelectorAll(".hero-jar-left, .hero-jar-right"), {
+      rotateX: 0,
+      rotateY: 0,
+      x: 0,
+      y: 0,
+      duration: 1.2,
+      ease: "power4.out",
+      overwrite: "auto",
+    });
+  };
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // 1. Hero load animation
+      const heroTl = gsap.timeline();
+      
+      heroTl.fromTo(
+        ".hero-animate-badge",
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power4.out" }
+      );
+      
+      heroTl.fromTo(
+        ".hero-text-word",
+        { y: "100%" },
+        {
+          y: "0%",
+          duration: 0.8,
+          stagger: 0.05,
+          ease: "power4.out",
+        },
+        "-=0.4"
+      );
+      
+      heroTl.fromTo(
+        ".hero-animate-desc",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        "-=0.4"
+      );
+      
+      heroTl.fromTo(
+        ".hero-animate-ctas, .hero-animate-bullets",
+        { opacity: 0, scale: 0.95 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power3.out"
+        },
+        "-=0.3"
+      );
+      
+      heroTl.fromTo(
+        ".hero-animate-image",
+        { opacity: 0, y: 30, scale: 0.98 },
+        { opacity: 1, y: 0, scale: 1, duration: 1.0, ease: "power4.out" },
+        "-=0.8"
+      );
+
+      // 2. Trust Section (Why Choose Us)
+      // Stamp bounce animation for certification banner
+      gsap.fromTo(
+        ".trust-banner",
+        { scale: 0.85, opacity: 0, rotate: -3 },
+        {
+          scale: 1,
+          opacity: 1,
+          rotate: 0,
+          duration: 0.8,
+          ease: "back.out(1.5)",
+          scrollTrigger: {
+            trigger: ".trust-banner",
+            start: "top 85%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+
+      // Staggered slide up of feature cards
+      gsap.fromTo(
+        ".trust-card",
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".trust-cards-container",
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+
+      // 3. Products staggered matrix cascade reveal
+      gsap.fromTo(
+        ".product-card-reveal",
+        { opacity: 0, y: 40, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          stagger: {
+            amount: 0.4,
+            grid: "auto",
+            from: "start"
+          },
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: "#products .grid",
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      // 4. Logistics network regional cards horizontal slides
+      gsap.fromTo(
+        ".network-highlights-card",
+        { opacity: 0, x: -40 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.8,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".network-highlights-card",
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      gsap.fromTo(
+        ".region-card-gujarat",
+        { opacity: 0, x: -60 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1.0,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".region-card-gujarat",
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      gsap.fromTo(
+        ".region-card-border",
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".region-card-border",
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      // Location chips cascade waves scoped to each card triggers
+      document.querySelectorAll(".region-card").forEach((card) => {
+        const chips = card.querySelectorAll(".location-chip");
+        gsap.fromTo(
+          chips,
+          { opacity: 0, scale: 0.6, y: 12 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.03,
+            ease: "back.out(1.7)",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 80%",
+              toggleActions: "play none none none"
+            }
+          }
+        );
+      });
+
+      // 5. About Factory Section Ken Burns zoom-in
+      gsap.fromTo(
+        ".factory-image",
+        { scale: 1 },
+        {
+          scale: 1.06,
+          ease: "power1.out",
+          scrollTrigger: {
+            trigger: ".factory-section",
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1.2, // Smooth, slow Ken Burns follow-through
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   const pillars = [
     {
       icon: ShieldCheck,
+      iconClass: "trust-icon-ShieldCheck",
       title: t("whyChooseUs.pillar1Title"),
       desc: t("whyChooseUs.pillar1Desc"),
     },
     {
       icon: Sparkles,
+      iconClass: "trust-icon-Sparkles",
       title: t("whyChooseUs.pillar2Title"),
       desc: t("whyChooseUs.pillar2Desc"),
     },
     {
       icon: Truck,
+      iconClass: "trust-icon-Truck",
       title: t("whyChooseUs.pillar3Title"),
       desc: t("whyChooseUs.pillar3Desc"),
     },
@@ -153,18 +418,18 @@ function Home() {
         />
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-gold-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900">
+            <div className="hero-animate-badge opacity-0 inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-gold-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900">
               <BadgeCheck className="h-4 w-4" />
               {t("hero.badge")}
             </div>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              {t("hero.title")}{" "}
-              <span className="text-brand-blue">{t("hero.titleAccent")}</span>
+              {renderSplitText(t("hero.title"))}{" "}
+              <span className="text-brand-blue block sm:inline">{renderSplitText(t("hero.titleAccent"))}</span>
             </h1>
-            <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+            <p className="hero-animate-desc opacity-0 mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
               {t("hero.desc")}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="hero-animate-ctas opacity-0 mt-8 flex flex-wrap gap-3">
               <Button
                 asChild
                 size="lg"
@@ -186,7 +451,7 @@ function Home() {
                 </a>
               </Button>
             </div>
-            <ul className="mt-8 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            <ul className="hero-animate-bullets opacity-0 mt-8 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
                 t("hero.bullet1"),
                 t("hero.bullet2"),
@@ -200,10 +465,15 @@ function Home() {
               ))}
             </ul>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-brand-gold-soft via-white to-secondary blur-2xl opacity-70" />
-            <div className="grid grid-cols-2 gap-4">
-              <div className="aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-white shadow-xl">
+          <div
+            className="hero-animate-image opacity-0 relative"
+            onMouseMove={handleHeroMouseMove}
+            onMouseLeave={handleHeroMouseLeave}
+            style={{ perspective: 1000 }}
+          >
+            <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-brand-gold-soft via-white to-secondary blur-2xl opacity-70 pointer-events-none" />
+            <div className="grid grid-cols-2 gap-4" style={{ transformStyle: "preserve-3d" }}>
+              <div className="hero-jar-left aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-white shadow-xl transition-shadow duration-500 hover:shadow-2xl">
                 <img
                   src={chunaWhite}
                   alt="White edible chuna jar"
@@ -212,7 +482,7 @@ function Home() {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="mt-8 aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-white shadow-xl">
+              <div className="hero-jar-right mt-8 aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-white shadow-xl transition-shadow duration-500 hover:shadow-2xl">
                 <img
                   src={chunaYellow}
                   alt="Yellow edible chuna tub"
@@ -222,7 +492,7 @@ function Home() {
                 />
               </div>
             </div>
-            <div className="absolute -bottom-4 left-4 right-4 mx-auto flex max-w-xs items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-lg sm:left-auto sm:right-[-20px] sm:max-w-[280px]">
+            <div className="hero-compliance-badge absolute -bottom-4 left-4 right-4 mx-auto flex max-w-xs items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-lg sm:left-auto sm:right-[-20px] sm:max-w-[280px]">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-gold/15 text-brand-gold">
                 <ShieldCheck className="h-5 w-5" />
               </div>
@@ -246,7 +516,7 @@ function Home() {
             description={t("whyChooseUs.desc")}
           />
 
-          <div className="mx-auto mt-10 flex max-w-2xl items-center gap-4 rounded-2xl border border-brand-gold/40 bg-card p-5 shadow-sm">
+          <div className="trust-banner opacity-0 mx-auto mt-10 flex max-w-2xl items-center gap-4 rounded-2xl border border-brand-gold/40 bg-card p-5 shadow-sm">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-brand-gold text-primary shadow-sm">
               <BadgeCheck className="h-7 w-7" />
             </div>
@@ -263,14 +533,14 @@ function Home() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="trust-cards-container mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {pillars.map((p) => (
               <div
                 key={p.title}
-                className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-gold/50 hover:shadow-lg"
+                className="trust-card opacity-0 group rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-500 hover:-translate-y-[6px] hover:border-brand-gold/50 hover:shadow-lg"
               >
                 <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground transition-colors group-hover:bg-brand-gold group-hover:text-primary">
-                  <p.icon className="h-6 w-6" />
+                  <p.icon className={`h-6 w-6 ${p.iconClass}`} />
                 </div>
                 <h3 className="mt-4 text-lg font-bold text-foreground">{p.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
@@ -279,6 +549,9 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* INGREDIENTS */}
+      <IngredientsSection />
 
       {/* PRODUCTS */}
       <section id="products" className="py-20">
@@ -324,7 +597,7 @@ function Home() {
 
           <div className="mt-12 grid gap-8 lg:grid-cols-3">
             {/* Left/Main Column: Highlights */}
-            <div className="lg:col-span-1 flex flex-col justify-between rounded-3xl border border-border bg-card p-8 shadow-sm">
+            <div className="network-highlights-card opacity-0 lg:col-span-1 flex flex-col justify-between rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div>
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold">
                   <Globe className="h-6 w-6" />
@@ -373,25 +646,31 @@ function Home() {
             <div className="lg:col-span-2 grid gap-6 sm:grid-cols-2">
               {networkRegions.map((region, idx) => {
                 const isGujarat = idx === 0;
+                const regionClass = isGujarat
+                  ? "region-card-gujarat"
+                  : "region-card-border";
                 return (
                   <div
                     key={region.title}
-                    className={`rounded-3xl border p-6 bg-card shadow-sm transition-all hover:shadow-md hover:border-brand-gold/40 flex flex-col justify-between ${
+                    className={`region-card ${regionClass} opacity-0 rounded-3xl border p-6 bg-card shadow-sm transition-all hover:shadow-md hover:border-brand-gold/40 flex flex-col justify-between ${
                       isGujarat ? "sm:col-span-2 border-brand-gold/30 bg-gradient-to-br from-card via-card to-brand-gold-soft/20" : "border-border"
                     }`}
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <MapPin className={`h-4 w-4 ${isGujarat ? "text-brand-gold" : "text-brand-blue"}`} />
+                        <div className="relative mr-1 flex items-center justify-center">
+                          <span className="absolute inline-flex h-4 w-4 rounded-full opacity-60 animate-ping pointer-events-none" style={{ animationDuration: '3s', backgroundColor: isGujarat ? 'var(--brand-gold)' : 'var(--brand-blue)' }} />
+                          <MapPin className={`relative h-4 w-4 ${isGujarat ? "text-brand-gold" : "text-brand-blue"}`} />
+                        </div>
                         <h4 className="font-bold text-foreground text-lg">{region.title}</h4>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">{region.description}</p>
                       
-                      <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="location-chips-container mt-4 flex flex-wrap gap-2">
                         {region.hubs.map((hub) => (
                           <span
                             key={hub}
-                            className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium border ${
+                            className={`location-chip opacity-0 inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium border ${
                               hub.includes("Manufacturing") || hub.includes("ઉત્પાદન") || hub.includes("उत्पादन")
                                 ? "bg-primary text-primary-foreground border-primary" 
                                 : "bg-secondary text-secondary-foreground border-border hover:border-brand-gold/30 hover:bg-white transition-colors"
@@ -411,7 +690,7 @@ function Home() {
       </section>
 
       {/* ABOUT */}
-      <section className="bg-primary py-20 text-primary-foreground">
+      <section className="factory-section bg-primary py-20 text-primary-foreground">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-primary-foreground/10 shadow-2xl">
             <img
@@ -420,7 +699,7 @@ function Home() {
               loading="lazy"
               width={1024}
               height={1024}
-              className="h-full w-full object-cover"
+              className="factory-image h-full w-full object-cover"
             />
           </div>
           <div>

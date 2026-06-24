@@ -106,7 +106,12 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>{t("form.labels.name")}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("form.placeholders.name")} {...field} />
+                  <div className="input-wrapper relative">
+                    <Input placeholder={t("form.placeholders.name")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
+                    <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                    </svg>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,7 +124,12 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>{t("form.labels.company")}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("form.placeholders.company")} {...field} />
+                  <div className="input-wrapper relative">
+                    <Input placeholder={t("form.placeholders.company")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
+                    <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                    </svg>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -135,7 +145,12 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>{t("form.labels.phone")}</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder={t("form.placeholders.phone")} {...field} />
+                  <div className="input-wrapper relative">
+                    <Input type="tel" placeholder={t("form.placeholders.phone")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
+                    <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                    </svg>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +163,12 @@ export function InquiryForm() {
               <FormItem>
                 <FormLabel>{t("form.labels.quantity")}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("form.placeholders.quantity")} {...field} />
+                  <div className="input-wrapper relative">
+                    <Input placeholder={t("form.placeholders.quantity")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
+                    <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                    </svg>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -217,7 +237,12 @@ export function InquiryForm() {
             <FormItem>
               <FormLabel>{t("form.labels.address")}</FormLabel>
               <FormControl>
-                <Input placeholder={t("form.placeholders.address")} {...field} />
+                <div className="input-wrapper relative">
+                  <Input placeholder={t("form.placeholders.address")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
+                  <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                  </svg>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -231,11 +256,17 @@ export function InquiryForm() {
             <FormItem>
               <FormLabel>{t("form.labels.message")}</FormLabel>
               <FormControl>
-                <Textarea
-                  rows={4}
-                  placeholder={t("form.placeholders.message")}
-                  {...field}
-                />
+                <div className="input-wrapper relative">
+                  <Textarea
+                    rows={4}
+                    placeholder={t("form.placeholders.message")}
+                    className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border"
+                    {...field}
+                  />
+                  <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
+                  </svg>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -245,10 +276,14 @@ export function InquiryForm() {
         <Button
           type="submit"
           size="lg"
-          className="bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
+          className="relative overflow-hidden bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
         >
-          <Send className="mr-2 h-4 w-4" />
-          {t("form.submit")}
+          {/* Button shimmer element */}
+          <span className="absolute inset-0 w-[30%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-[150%] btn-sheen pointer-events-none" />
+          <span className="relative z-10 flex items-center justify-center">
+            <Send className="mr-2 h-4 w-4" />
+            {t("form.submit")}
+          </span>
         </Button>
         <p className="text-xs text-muted-foreground">
           {t("form.info")}

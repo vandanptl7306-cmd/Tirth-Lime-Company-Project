@@ -61,6 +61,7 @@ export function SiteHeader() {
     { to: "/", label: t("nav.home") },
     { to: "/products", label: t("nav.products") },
     { to: "/quality", label: t("nav.quality") },
+    { to: "/", hash: "ingredients", label: t("nav.ingredients") },
     { to: "/about", label: t("nav.about") },
     { to: "/contact", label: t("nav.contact") },
   ] as const;
@@ -72,11 +73,12 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-1 lg:flex">
           {NAV_ITEMS.map((item) => (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
+              hash={"hash" in item ? item.hash : undefined}
               className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
               activeProps={{ className: "text-primary bg-accent" }}
-              activeOptions={{ exact: item.to === "/" }}
+              activeOptions={{ exact: item.to === "/" && !("hash" in item) }}
             >
               {item.label}
             </Link>
@@ -119,12 +121,13 @@ export function SiteHeader() {
                 </div>
                 {NAV_ITEMS.map((item) => (
                   <Link
-                    key={item.to}
+                    key={item.label}
                     to={item.to}
+                    hash={"hash" in item ? item.hash : undefined}
                     onClick={() => setOpen(false)}
                     className="rounded-md px-3 py-3 text-base font-medium text-foreground hover:bg-accent"
                     activeProps={{ className: "text-primary bg-accent" }}
-                    activeOptions={{ exact: item.to === "/" }}
+                    activeOptions={{ exact: item.to === "/" && !("hash" in item) }}
                   >
                     {item.label}
                   </Link>
