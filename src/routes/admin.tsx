@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   TrendingUp,
   CheckCircle2,
@@ -136,6 +137,61 @@ const MOCK_SALES: Sale[] = [
   },
 ];
 
+// Simulated DB API functions with network delay
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function apiGetSales(): Promise<Sale[]> {
+  await delay(300);
+  if (typeof window === "undefined") return MOCK_SALES;
+  const stored = localStorage.getItem("khodiyar_sales_data");
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      const isOldFormat = parsed.some((s: any) => !s.items);
+      if (isOldFormat) {
+        localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
+        return MOCK_SALES;
+      }
+      return parsed;
+    } catch {
+      localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
+      return MOCK_SALES;
+    }
+  }
+  localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
+  return MOCK_SALES;
+}
+
+async function apiSaveSales(salesList: Sale[]): Promise<Sale[]> {
+  await delay(300);
+  if (typeof window !== "undefined") {
+    localStorage.setItem("khodiyar_sales_data", JSON.stringify(salesList));
+  }
+  return salesList;
+}
+
+async function apiGetProducts(): Promise<Product[]> {
+  await delay(250);
+  return getStoredProducts();
+}
+
+async function apiSaveProducts(productsList: Product[]): Promise<Product[]> {
+  await delay(250);
+  saveStoredProducts(productsList);
+  return productsList;
+}
+
+async function apiGetGallery(): Promise<GallerySlide[]> {
+  await delay(250);
+  return getStoredGallery();
+}
+
+async function apiSaveGallery(galleryList: GallerySlide[]): Promise<GallerySlide[]> {
+  await delay(250);
+  saveStoredGallery(galleryList);
+  return galleryList;
+}
+
 type CustomTooltipProps = {
   active?: boolean;
   payload?: any[];
@@ -172,8 +228,45 @@ const CustomChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 function AdminDashboard() {
   const { t } = useLanguage();
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: sales = [], isLoading: salesLoading } = useQuery<Sale[]>({
+    queryKey: ["sales"],
+    queryFn: apiGetSales,
+  });
+
+  const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: apiGetProducts,
+  });
+
+  const { data: gallery = [], isLoading: galleryLoading } = useQuery<GallerySlide[]>({
+    queryKey: ["gallery"],
+    queryFn: apiGetGallery,
+  });
+
+  // Mutations
+  const salesMutation = useMutation({
+    mutationFn: apiSaveSales,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+    },
+  });
+
+  const productsMutation = useMutation({
+    mutationFn: apiSaveProducts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const galleryMutation = useMutation({
+    mutationFn: apiSaveGallery,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    },
+  });
+
   const [activeTab, setActiveTab] = useState<"sales" | "products" | "gallery">("sales");
   const [timeRange, setTimeRange] = useState<"7days" | "30days" | "all">("all");
   const [showAddProductModal, setShowAddProductModal] = useState(false);
@@ -182,7 +275,6 @@ function AdminDashboard() {
   const [deleteSaleConfirm, setDeleteSaleConfirm] = useState<string | null>(null);
 
   // Gallery management states
-  const [gallery, setGallery] = useState<GallerySlide[]>([]);
   const [showAddSlideModal, setShowAddSlideModal] = useState(false);
   const [editingSlide, setEditingSlide] = useState<GallerySlide | null>(null);
   const [deleteSlideConfirm, setDeleteSlideConfirm] = useState<string | null>(null);
@@ -226,32 +318,84 @@ function AdminDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    setProducts(getStoredProducts());
-    setGallery(getStoredGallery());
-    const stored = localStorage.getItem("khodiyar_sales_data");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const isOldFormat = parsed.some((s: any) => !s.items);
-        if (isOldFormat) {
-          localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
-          setSales(MOCK_SALES);
-        } else {
-          setSales(parsed);
-        }
-      } catch (err) {
-        localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
-        setSales(MOCK_SALES);
-      }
-    } else {
-      localStorage.setItem("khodiyar_sales_data", JSON.stringify(MOCK_SALES));
-      setSales(MOCK_SALES);
-    }
   }, []);
 
+  // Real-time client simulator hook (simulates incoming WhatsApp orders in real-time)
+  useEffect(() => {
+    if (!mounted) return;
+
+    const companies = [
+      "Janta Paan Center, Anand",
+      "Shree Hari Agency, Nadiad",
+      "Krishna Paan House, Surat",
+      "Balaji Lime Dist., Rajkot",
+      "Maruti Paan Bhandar, Ahmedabad",
+      "Rajasthan Lime Traders, Udaipur",
+      "Ambika Paan Shop, Vadodara",
+    ];
+
+    const productsList = [
+      { name: "Tirth Chuna Parcel (White — Medium)", price: 300 },
+      { name: "Riddhi Siddhi Chuna Parcel (Yellow — Packing)", price: 600 },
+      { name: "Tirth Chuna Parcel (Yellow — Ghata)", price: 350 },
+      { name: "Riddhi Siddhi Chuna Parcel (Yellow — Loose)", price: 450 },
+      { name: "Tirth Chuna Parcel (White — Ghata)", price: 325 },
+    ];
+
+    const interval = setInterval(() => {
+      const randomCompany = companies[Math.floor(Math.random() * companies.length)];
+      const randomProd = productsList[Math.floor(Math.random() * productsList.length)];
+      const randomQty = Math.floor(Math.random() * 8 + 2) * 10; // 20 to 90 boxes
+      const total = randomQty * randomProd.price;
+
+      const newSale: Sale = {
+        id: "s_" + Date.now(),
+        date: new Date().toISOString().split("T")[0],
+        company: randomCompany,
+        items: [
+          {
+            product: randomProd.name,
+            packSize: Math.random() > 0.5 ? "12x1 pack" : "24x1 pack",
+            quantity: randomQty,
+            price: randomProd.price,
+            total: total,
+          },
+        ],
+        revenue: total,
+        status: "Pending",
+      };
+
+      const stored = localStorage.getItem("khodiyar_sales_data");
+      let currentSales: Sale[] = [];
+      if (stored) {
+        try {
+          currentSales = JSON.parse(stored);
+        } catch {
+          currentSales = [];
+        }
+      }
+      const updatedSales = [newSale, ...currentSales];
+      localStorage.setItem("khodiyar_sales_data", JSON.stringify(updatedSales));
+
+      // Trigger cache invalidation so the dashboard updates in real-time!
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+
+      // Notify admin
+      toast.info(`🔔 Real-Time Order Stream: New wholesale inquiry from "${randomCompany}" for ₹${total.toLocaleString("en-IN")}!`, {
+        duration: 8000,
+        position: "top-right"
+      });
+    }, 45000); // Trigger every 45 seconds
+
+    return () => clearInterval(interval);
+  }, [mounted, queryClient]);
+
   const saveSales = (newSales: Sale[]) => {
-    setSales(newSales);
-    localStorage.setItem("khodiyar_sales_data", JSON.stringify(newSales));
+    salesMutation.mutate(newSales);
+  };
+
+  const saveProducts = (newProducts: Product[]) => {
+    productsMutation.mutate(newProducts);
   };
 
   const handleToggleStatus = (id: string) => {
@@ -379,8 +523,7 @@ function AdminDashboard() {
       toast.success("New product added successfully!");
     }
 
-    setProducts(newProductsList);
-    saveStoredProducts(newProductsList);
+    saveProducts(newProductsList);
     
     setShowAddProductModal(false);
     resetProductForm();
@@ -403,8 +546,7 @@ function AdminDashboard() {
 
   // Gallery Management helpers
   const saveGallery = (newGallery: GallerySlide[]) => {
-    setGallery(newGallery);
-    saveStoredGallery(newGallery);
+    galleryMutation.mutate(newGallery);
   };
 
   const resetSlideForm = () => {
@@ -1810,8 +1952,7 @@ function AdminDashboard() {
               <Button
                 onClick={() => {
                   const newProductsList = products.filter((p) => p.id !== deleteProductConfirm);
-                  setProducts(newProductsList);
-                  saveStoredProducts(newProductsList);
+                  saveProducts(newProductsList);
                   toast.success("Product deleted from catalog.");
                   setDeleteProductConfirm(null);
                 }}

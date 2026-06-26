@@ -6,6 +6,10 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getStoredGallery, DEFAULT_GALLERY, type GallerySlide } from "@/lib/gallery";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -69,6 +73,81 @@ function AboutPage() {
     }
   }, [currentIdx, slides.length]);
 
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // 1. Header fade + reveal
+      gsap.fromTo(
+        ".about-header-reveal",
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }
+      );
+
+      // 2. Main content reveal (gallery slides in from left, story from right)
+      gsap.fromTo(
+        ".about-gallery-reveal",
+        { opacity: 0, x: -50 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1.0,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".about-gallery-reveal",
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      gsap.fromTo(
+        ".about-text-reveal",
+        { opacity: 0, x: 50 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1.0,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".about-text-reveal",
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+
+      // 3. Stats section count-up and fade-in stagger
+      gsap.fromTo(
+        ".about-stat-card",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".about-stats-container",
+            start: "top 85%",
+            toggleActions: "play none none none",
+            onEnter: () => {
+              document.querySelectorAll(".about-stat-number").forEach((el) => {
+                const target = parseFloat(el.getAttribute("data-target") || "0");
+                gsap.to(el, {
+                  innerText: target,
+                  duration: 1.8,
+                  snap: { innerText: 1 },
+                  ease: "power1.out"
+                });
+              });
+            }
+          }
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   const stats = [
     { k: "2", v: t("aboutPage.stat1Label") },
     { k: "6", v: t("aboutPage.stat2Label") },
@@ -78,7 +157,7 @@ function AboutPage() {
   return (
     <SiteLayout>
       <section className="bg-secondary/60 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 about-header-reveal opacity-0">
           <SectionHeading
             align="left"
             eyebrow={t("aboutPage.eyebrow")}
@@ -92,7 +171,7 @@ function AboutPage() {
         <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           
           {/* PHOTO SLIDER & VIEWER CONTAINER */}
-          <div className="flex flex-col gap-4">
+          <div className="about-gallery-reveal opacity-0 flex flex-col gap-4">
             {slides.length > 0 ? (
               <>
                 {/* Main Big Screen Viewport */}
@@ -185,7 +264,7 @@ function AboutPage() {
           </div>
 
           {/* RIGHT COLUMN: TEXT CONTENT */}
-          <div className="space-y-5 text-base text-muted-foreground">
+          <div className="about-text-reveal opacity-0 space-y-5 text-base text-muted-foreground">
             <div className="h-1 bg-gradient-to-r from-brand-gold to-brand-blue w-20 rounded-full" />
             <p>{t("aboutPage.storyP1")}</p>
             <p>{t("aboutPage.storyP2")}</p>
@@ -268,15 +347,22 @@ function AboutPage() {
       )}
 
       <section className="bg-primary py-16 text-primary-foreground">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 sm:grid-cols-3 lg:px-8">
-          {stats.map((s) => (
-            <div key={s.v} className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-6 text-center">
-              <div className="text-4xl font-bold text-brand-gold">{s.k}</div>
-              <div className="mt-1 text-sm uppercase tracking-wider text-primary-foreground/75">
-                {s.v}
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 sm:grid-cols-3 lg:px-8 about-stats-container">
+          {stats.map((s) => {
+            const numVal = parseFloat(s.k.replace("%", ""));
+            const suffix = s.k.includes("%") ? "%" : "";
+            return (
+              <div key={s.v} className="about-stat-card opacity-0 rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-6 text-center">
+                <div className="text-4xl font-bold text-brand-gold flex items-center justify-center">
+                  <span className="about-stat-number" data-target={numVal}>0</span>
+                  {suffix && <span>{suffix}</span>}
+                </div>
+                <div className="mt-1 text-sm uppercase tracking-wider text-primary-foreground/75">
+                  {s.v}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </SiteLayout>
