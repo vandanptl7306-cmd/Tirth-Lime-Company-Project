@@ -116,6 +116,28 @@ export const translations = {
       learnMore: "Learn more about us",
       qualityHygiene: "Quality & Hygiene",
     },
+    feedback: {
+      eyebrow: "Customer Voice",
+      title: "Share Your Experience",
+      desc: "Are you a distributor or paan-shop owner? Help us improve by submitting your honest feedback.",
+      labels: {
+        name: "Your Name",
+        company: "Company / Shop Name",
+        rating: "Rating",
+        comment: "Your Feedback / Review",
+      },
+      placeholders: {
+        name: "e.g., Ramesh Patel",
+        company: "e.g., Patel Paan Bhandar",
+        comment: "Share your experience with our product quality, delivery, or service...",
+      },
+      submit: "Submit Review",
+      submitting: "Submitting Review...",
+      successToast: "Thank you for your feedback! It has been submitted for admin approval.",
+      ratingError: "Please select a rating",
+      approvedReviews: "What Our Partners Say",
+      approvedSubtitle: "Real feedback from wholesale distributors and retail vendors across India."
+    },
     inquirySection: {
       eyebrow: "Bulk Inquiry",
       title: "Get a wholesale quote",
@@ -507,6 +529,28 @@ export const translations = {
       learnMore: "અમારા વિશે વધુ જાણો",
       qualityHygiene: "ગુણવત્તા અને સ્વચ્છતા",
     },
+    feedback: {
+      eyebrow: "ગ્રાહક પ્રતિસાદ",
+      title: "તમારો અનુભવ શેર કરો",
+      desc: "શું તમે વિતરક અથવા પાનના ગલ્લાના માલિક છો? તમારો સાચો પ્રતિસાદ સબમિટ કરીને અમને સુધારવામાં સહાય કરો.",
+      labels: {
+        name: "તમારું નામ",
+        company: "કંપની / દુકાનનું નામ",
+        rating: "રેટિંગ (સ્ટાર)",
+        comment: "તમારો પ્રતિસાદ / સમીક્ષા",
+      },
+      placeholders: {
+        name: "દા.ત., રમેશ પટેલ",
+        company: "દા.ત., પટેલ પાન ભંડાર",
+        comment: "અમારી પ્રોડક્ટની ગુણવત્તા, ડિલિવરી અથવા સેવા વિશે તમારો અનુભવ શેર કરો...",
+      },
+      submit: "પ્રતિસાદ સબમિટ કરો",
+      submitting: "સબમિટ થઈ રહ્યું છે...",
+      successToast: "તમારા પ્રતિસાદ બદલ આભાર! તે એડમિન મંજૂરી માટે સબમિટ કરવામાં આવ્યો છે.",
+      ratingError: "કૃપા કરીને રેટિંગ પસંદ કરો",
+      approvedReviews: "અમારા ભાગીદારોના અભિપ્રાય",
+      approvedSubtitle: "સમગ્ર ભારતમાં જથ્થાબંધ વિતરકો અને છૂટક વિક્રેતાઓ તરફથી મળેલ વાસ્તવિક પ્રતિસાદ."
+    },
     inquirySection: {
       eyebrow: "જથ્થાબંધ પૂછપરછ",
       title: "જથ્થાબંધ ભાવ મેળવો",
@@ -897,6 +941,28 @@ export const translations = {
       desc: "खोदियार इंडस्ट्री शुद्धता, स्वच्छता और स्थिरता पर समझौता न करने वाले ध्यान के साथ खाने योग्य चूने का निर्माण करती रही है। हमारी आधुनिक सुविधा, सावधानीपूर्वक सोर्सिंग और प्रक्रिया अनुशासन थोक विक्रेताओं, वितरकों और पान-दुकान विक्रेताओं को आत्मविश्वास के साथ हमारे ब्रांडों को रखने की अनुमति देते हैं.",
       learnMore: "हमारे बारे में अधिक जानें",
       qualityHygiene: "गुणवत्ता और स्वच्छता",
+    },
+    feedback: {
+      eyebrow: "ग्राहक प्रतिक्रिया",
+      title: "अपना अनुभव साझा करें",
+      desc: "क्या आप वितरक या पान की दुकान के मालिक हैं? अपनी ईमानदार प्रतिक्रिया सबमिट करके हमें बेहतर बनाने में मदद करें।",
+      labels: {
+        name: "आपका नाम",
+        company: "कंपनी / दुकान का नाम",
+        rating: "रेटिंग",
+        comment: "आपकी प्रतिक्रिया / समीक्षा",
+      },
+      placeholders: {
+        name: "जैसे, रमेश पटेल",
+        company: "जैसे, पटेल पान भंडार",
+        comment: "हमारी उत्पाद गुणवत्ता, वितरण या सेवा के बारे में अपना अनुभव साझा करें...",
+      },
+      submit: "समीक्षा सबमिट करें",
+      submitting: "समीक्षा सबमिट हो रही है...",
+      successToast: "आपकी प्रतिक्रिया के लिए धन्यवाद! इसे व्यवस्थापक अनुमोदन के लिए सबमिट कर दिया गया है.",
+      ratingError: "कृपया रेटिंग चुनें",
+      approvedReviews: "हमारे साझेदार क्या कहते हैं",
+      approvedSubtitle: "पूरे भारत में थोक वितरकों और खुदरा विक्रेताओं से वास्तविक प्रतिक्रिया।"
     },
     inquirySection: {
       eyebrow: "थोक पूछताछ",

@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { InquiryForm } from "@/components/site/InquiryForm";
+import { FeedbackForm } from "@/components/site/FeedbackForm";
 import { ADDRESS, EMAIL, PHONE_DISPLAY, WHATSAPP_NUMBER, buildWaLink } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -138,6 +139,25 @@ function ContactPage() {
             </p>
             <div className="mt-6">
               <InquiryForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEEDBACK SUBMISSION SECTION */}
+      <section className="border-t border-border py-16 bg-secondary/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <SectionHeading
+                align="left"
+                eyebrow={t("feedback.eyebrow")}
+                title={t("feedback.title")}
+                description={t("feedback.desc")}
+              />
+            </div>
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:col-span-3">
+              <FeedbackForm />
             </div>
           </div>
         </div>

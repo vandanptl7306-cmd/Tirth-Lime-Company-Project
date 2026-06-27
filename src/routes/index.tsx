@@ -10,6 +10,7 @@ import {
   MapPin,
   Globe,
   Map,
+  Star,
 } from "lucide-react";
 
 import { useState, useEffect, useRef } from "react";
@@ -23,6 +24,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
+import { getStoredFeedback, type CustomerFeedback } from "@/lib/feedback";
 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -100,6 +102,11 @@ function Home() {
   const distributorWa = buildWaLink(waDistributorMsg);
 
   const [products, setProducts] = useState(PRODUCTS);
+  const [feedbacks, setFeedbacks] = useState<CustomerFeedback[]>([]);
+  
+  useEffect(() => {
+    setFeedbacks(getStoredFeedback().filter(f => f.approved && f.rating >= 4));
+  }, []);
 
   useEffect(() => {
     setProducts(getStoredProducts());
@@ -773,6 +780,59 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* TESTIMONIALS SECTION */}
+      {feedbacks.length > 0 && (
+        <section className="py-20 border-t border-border bg-secondary/35">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <SectionHeading
+                eyebrow={t("feedback.eyebrow")}
+                title={t("feedback.approvedReviews")}
+                description={t("feedback.approvedSubtitle")}
+              />
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {feedbacks.map((fb) => (
+                <div
+                  key={fb.id}
+                  className="trust-card rounded-3xl border border-border p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-card"
+                >
+                  <div>
+                    {/* Stars */}
+                    <div className="flex gap-1 mb-4 text-brand-gold">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4.5 w-4.5 ${
+                            i < fb.rating ? "fill-brand-gold text-brand-gold" : "text-muted-foreground/20"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {/* Comment */}
+                    <p className="text-sm italic text-foreground/80 leading-relaxed">
+                      "{fb.comment}"
+                    </p>
+                  </div>
+                  
+                  {/* Reviewer Details */}
+                  <div className="mt-6 flex items-center gap-3 pt-4 border-t border-border/50">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/5 text-primary font-bold text-sm uppercase">
+                      {fb.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate">{fb.name}</div>
+                      <div className="text-[10px] font-semibold text-muted-foreground truncate">{fb.company}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* INQUIRY */}
       <section id="inquiry" className="py-20">

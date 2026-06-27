@@ -19,6 +19,8 @@ import {
   Lock,
   User,
   LogOut,
+  Star,
+  UserPlus,
 } from "lucide-react";
 import {
   AreaChart,
@@ -38,8 +40,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
-import { PRODUCTS, getStoredProducts, saveStoredProducts, type Product } from "@/lib/products";
+import { PRODUCTS, getStoredProducts, saveStoredProducts, buildWaLink, type Product } from "@/lib/products";
 import { getStoredGallery, saveStoredGallery, type GallerySlide } from "@/lib/gallery";
+import { getStoredFeedback, saveStoredFeedback, hasProfanity, type CustomerFeedback } from "@/lib/feedback";
+import { getStoredCustomers, saveStoredCustomers, type Customer } from "@/lib/customers";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -68,6 +72,7 @@ type Sale = {
   id: string;
   date: string;
   company: string;
+  phone?: string;
   items: SaleItem[];
   revenue: number;
   status: "Done" | "Pending";
@@ -78,6 +83,7 @@ const MOCK_SALES: Sale[] = [
     id: "s1",
     date: "2026-04-10",
     company: "Janta Paan Bhandar",
+    phone: "919998421346",
     items: [{ product: "Tirth Chuna Parcel (White — Medium)", packSize: "12x1 pack", quantity: 50, price: 300, total: 15000 }],
     revenue: 15000,
     status: "Done"
@@ -86,6 +92,7 @@ const MOCK_SALES: Sale[] = [
     id: "s2",
     date: "2026-04-18",
     company: "Maruti Traders",
+    phone: "919998421346",
     items: [{ product: "Riddhi Siddhi Chuna Parcel (Yellow — Packing)", packSize: "24x1 pack", quantity: 30, price: 600, total: 18000 }],
     revenue: 18000,
     status: "Done"
@@ -94,6 +101,7 @@ const MOCK_SALES: Sale[] = [
     id: "s3",
     date: "2026-05-02",
     company: "Kalyan Paan Shop",
+    phone: "919998421346",
     items: [{ product: "Tirth Chuna Parcel (Yellow — Ghata)", packSize: "12x1 pack", quantity: 20, price: 350, total: 7000 }],
     revenue: 7000,
     status: "Done"
@@ -102,6 +110,7 @@ const MOCK_SALES: Sale[] = [
     id: "s4",
     date: "2026-05-15",
     company: "Gujarat Lime Distributors",
+    phone: "919998421346",
     items: [{ product: "Riddhi Siddhi Chuna Parcel (Yellow — Loose)", packSize: "24x1 pack", quantity: 100, price: 450, total: 45000 }],
     revenue: 45000,
     status: "Done"
@@ -110,6 +119,7 @@ const MOCK_SALES: Sale[] = [
     id: "s5",
     date: "2026-05-28",
     company: "Rajasthan Paan Center",
+    phone: "919998421346",
     items: [{ product: "Tirth Chuna Parcel (White — Ghata)", packSize: "12x1 pack", quantity: 40, price: 325, total: 13000 }],
     revenue: 13000,
     status: "Pending"
@@ -307,7 +317,7 @@ function AdminDashboard() {
     },
   });
 
-  const [activeTab, setActiveTab] = useState<"sales" | "products" | "gallery">("sales");
+  const [activeTab, setActiveTab] = useState<"sales" | "products" | "gallery" | "feedbacks" | "customers">("sales");
   const [timeRange, setTimeRange] = useState<"7days" | "30days" | "all">("all");
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -345,6 +355,7 @@ function AdminDashboard() {
 
   // Form states
   const [formCompany, setFormCompany] = useState("");
+  const [formPhone, setFormPhone] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formStatus, setFormStatus] = useState<"Done" | "Pending">("Pending");
   const [formItems, setFormItems] = useState<{
@@ -357,10 +368,78 @@ function AdminDashboard() {
     { product: "", packSize: "12x1 pack", quantity: 1, price: 0, total: 0 }
   ]);
 
+  const [feedbacksList, setFeedbacksList] = useState<CustomerFeedback[]>([]);
+  const [customersList, setCustomersList] = useState<Customer[]>([]);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [custName, setCustName] = useState("");
+  const [custCompany, setCustCompany] = useState("");
+  const [custPhone, setCustPhone] = useState("");
+  const [custAddress, setCustAddress] = useState("");
+
   useEffect(() => {
     setMounted(true);
+    setFeedbacksList(getStoredFeedback());
+    setCustomersList(getStoredCustomers());
   }, []);
 
+  const handleAddCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!custCompany || !custPhone) {
+      alert("Company name and phone number are required.");
+      return;
+    }
+
+    const newCustomer: Customer = {
+      id: "c" + Date.now(),
+      name: custName || "Owner",
+      company: custCompany,
+      phone: custPhone,
+      address: custAddress,
+      dateAdded: new Date().toISOString().split("T")[0]
+    };
+
+    const updated = [newCustomer, ...customersList];
+    setCustomersList(updated);
+    saveStoredCustomers(updated);
+    setShowAddCustomerModal(false);
+
+    // Reset fields
+    setCustName("");
+    setCustCompany("");
+    setCustPhone("");
+    setCustAddress("");
+    toast.success("Offline customer added successfully!");
+  };
+
+  const handleDeleteCustomer = (id: string) => {
+    if (confirm("Are you sure you want to delete this customer profile?")) {
+      const updated = customersList.filter(c => c.id !== id);
+      setCustomersList(updated);
+      saveStoredCustomers(updated);
+      toast.success("Customer profile deleted.");
+    }
+  };
+
+  const handleToggleApproveFeedback = (id: string) => {
+    const updated = feedbacksList.map((fb) => {
+      if (fb.id === id) {
+        return { ...fb, approved: !fb.approved };
+      }
+      return fb;
+    });
+    setFeedbacksList(updated);
+    saveStoredFeedback(updated);
+    toast.success("Feedback status updated!");
+  };
+
+  const handleDeleteFeedback = (id: string) => {
+    if (confirm("Are you sure you want to delete this review?")) {
+      const updated = feedbacksList.filter((fb) => fb.id !== id);
+      setFeedbacksList(updated);
+      saveStoredFeedback(updated);
+      toast.success("Review deleted successfully.");
+    }
+  };
 
   const saveSales = (newSales: Sale[]) => {
     salesMutation.mutate(newSales);
@@ -422,21 +501,16 @@ function AdminDashboard() {
   const handleAddSale = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCompany || !formDate) {
-      alert("Please fill in company name and dispatch date.");
+      alert("Customer name and dispatch date are required.");
       return;
     }
 
-    const incompleteItem = formItems.find(item => !item.product || item.quantity <= 0 || item.price <= 0);
-    if (incompleteItem) {
-      alert("Please ensure all products, quantities, and prices are filled correctly.");
-      return;
-    }
-
-    const calculatedRevenue = formItems.reduce((sum, item) => sum + item.total, 0);
+    const calculatedRevenue = formItems.reduce((acc, item) => acc + Number(item.total), 0);
 
     const newSale: Sale = {
-      id: "s_" + Date.now(),
+      id: "s" + Date.now(),
       company: formCompany,
+      phone: formPhone || "919998421346",
       items: formItems.map(item => ({
         product: item.product,
         packSize: item.packSize,
@@ -454,6 +528,7 @@ function AdminDashboard() {
 
     // Reset Form
     setFormCompany("");
+    setFormPhone("");
     setFormDate("");
     setFormStatus("Pending");
     setFormItems([{ product: "", packSize: "12x1 pack", quantity: 1, price: 0, total: 0 }]);
@@ -665,22 +740,42 @@ function AdminDashboard() {
     0
   );
 
-  // Prepare chart data (Chronological Growth)
-  const growthData = [...statsSales]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .reduce((acc: { date: string; revenue: number; cumulative: number }[], curr) => {
-      const lastCumulative = acc.length > 0 ? acc[acc.length - 1].cumulative : 0;
-      const formattedDate = new Date(curr.date).toLocaleDateString("en-IN", {
+  // Group sales by month for the Growth Chart (Monthly Growth)
+  const calculateMonthlyGrowthData = () => {
+    const monthlyMap: Record<string, { monthKey: string; revenue: number; timestamp: number }> = {};
+    
+    statsSales.forEach((s) => {
+      const dateObj = new Date(s.date);
+      const monthLabel = dateObj.toLocaleDateString("en-IN", {
         month: "short",
-        day: "numeric",
+        year: "numeric"
       });
-      acc.push({
-        date: formattedDate,
-        revenue: curr.revenue,
-        cumulative: lastCumulative + curr.revenue,
-      });
-      return acc;
-    }, []);
+      const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+      
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = {
+          monthKey: monthLabel,
+          revenue: 0,
+          timestamp: new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getTime()
+        };
+      }
+      monthlyMap[monthKey].revenue += s.revenue;
+    });
+
+    const sortedMonths = Object.values(monthlyMap).sort((a, b) => a.timestamp - b.timestamp);
+
+    let cumulative = 0;
+    return sortedMonths.map((m) => {
+      cumulative += m.revenue;
+      return {
+        date: m.monthKey,
+        revenue: m.revenue,
+        cumulative: cumulative
+      };
+    });
+  };
+
+  const growthData = calculateMonthlyGrowthData();
 
   // Done vs Pending Pie Chart Data
   const statusPieData = [
@@ -713,6 +808,53 @@ function AdminDashboard() {
       s.items.some((item) => item.product.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
+
+  // Calculate customer reorder reminders
+  const calculateReorderReminders = () => {
+    const customerMap: Record<string, { lastDate: string; phone?: string; product: string }> = {};
+    
+    sales.forEach((s) => {
+      const existing = customerMap[s.company];
+      if (!existing || new Date(s.date) > new Date(existing.lastDate)) {
+        const mainProduct = s.items[0]?.product || "Edible Chuna";
+        customerMap[s.company] = {
+          lastDate: s.date,
+          phone: s.phone,
+          product: mainProduct
+        };
+      }
+    });
+
+    const reminders: { company: string; lastDate: string; daysAgo: number; phone: string; product: string }[] = [];
+    const now = new Date();
+
+    Object.entries(customerMap).forEach(([company, info]) => {
+      const lastOrderDate = new Date(info.lastDate);
+      const diffTime = Math.abs(now.getTime() - lastOrderDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays >= 30) {
+        reminders.push({
+          company,
+          lastDate: info.lastDate,
+          daysAgo: diffDays,
+          phone: info.phone || "919998421346", // Fallback number
+          product: info.product
+        });
+      }
+    });
+
+    return reminders.sort((a, b) => b.daysAgo - a.daysAgo);
+  };
+
+  const reorderReminders = calculateReorderReminders();
+
+  const handleSendReminderMessage = (reminder: { company: string; lastDate: string; daysAgo: number; phone: string; product: string }) => {
+    const text = `Hello ${reminder.company}, this is Sanjay Patel from Khodiyar Industry. We noticed it has been ${reminder.daysAgo} days since your last order of ${reminder.product}. Would you like to review your stock and place a new bulk order?`;
+    const cleanPhone = reminder.phone.replace(/[^0-9]/g, "");
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
 
   if (!isAuthenticated) {
     return (
@@ -920,7 +1062,7 @@ function AdminDashboard() {
             >
               {t("admin.manageCatalog")}
             </button>
-            <button
+             <button
               onClick={() => setActiveTab("gallery")}
               className={`pb-3 text-sm font-bold border-b-2 px-2 transition-all relative ${
                 activeTab === "gallery"
@@ -929,6 +1071,26 @@ function AdminDashboard() {
               }`}
             >
               {t("admin.manageGallery")}
+            </button>
+            <button
+              onClick={() => setActiveTab("feedbacks")}
+              className={`pb-3 text-sm font-bold border-b-2 px-2 transition-all relative ${
+                activeTab === "feedbacks"
+                  ? "border-brand-blue text-brand-blue"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {language === "gu" ? "ગ્રાહક પ્રતિસાદ" : language === "hi" ? "ग्राहक समीक्षा" : "Customer Reviews"}
+            </button>
+            <button
+              onClick={() => setActiveTab("customers")}
+              className={`pb-3 text-sm font-bold border-b-2 px-2 transition-all relative ${
+                activeTab === "customers"
+                  ? "border-brand-blue text-brand-blue"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {language === "gu" ? "ગ્રાહકોની સૂચિ" : language === "hi" ? "ग्राहक सूची" : "Customers Directory"}
             </button>
           </div>
 
@@ -1082,6 +1244,15 @@ function AdminDashboard() {
                           fillOpacity={1}
                           fill="url(#colorCumulative)"
                         />
+                        <Area
+                          type="monotone"
+                          dataKey="revenue"
+                          name="Monthly Revenue"
+                          stroke="var(--brand-gold)"
+                          strokeWidth={1.5}
+                          fillOpacity={0}
+                          strokeDasharray="4 4"
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
@@ -1175,6 +1346,52 @@ function AdminDashboard() {
           ) : (
             <div className="h-96 w-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          )}
+
+          {/* REORDER REMINDERS WIDGET */}
+          {activeTab === "sales" && reorderReminders.length > 0 && (
+            <div className="mt-12 rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md animate-fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-1.5">
+                  <Clock className="h-5 w-5 text-amber-500 animate-pulse" />
+                  Reorder Reminders Due
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  These wholesale customers have not ordered in the last 30+ days. Prompt them to refill their stock.
+                </p>
+              </div>
+              
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {reorderReminders.map((reminder) => (
+                  <div 
+                    key={reminder.company}
+                    className="rounded-2xl border border-amber-200/50 bg-amber-50/20 dark:bg-amber-950/5 p-4 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs font-bold text-foreground truncate max-w-[70%]">{reminder.company}</span>
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200/40">
+                          {reminder.daysAgo} days ago
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Last order: <span className="font-semibold">{reminder.lastDate}</span> ({reminder.product})
+                      </p>
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleSendReminderMessage(reminder)}
+                      className="mt-4 w-full bg-whatsapp text-white hover:bg-whatsapp/90 font-semibold text-xs h-8 rounded-xl"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="mr-1.5 h-3.5 w-3.5">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.666.988 3.307 1.493 5.352 1.494 5.518 0 10.005-4.486 10.008-10.007.002-2.673-1.03-5.188-2.908-7.067C17.16 1.7 14.654.655 11.994.655 6.476.655 1.99 5.14 1.987 10.66c-.001 2.055.508 3.707 1.503 5.385l-.988 3.606 3.701-.971z" />
+                      </svg>
+                      Send WhatsApp Reminder
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -1419,7 +1636,7 @@ function AdminDashboard() {
                 </table>
               </div>
             </div>
-          ) : (
+          ) : activeTab === "gallery" ? (
             /* GALLERY SLIDES MANAGEMENT UI */
             <div className="mt-6 rounded-3xl border border-border bg-card shadow-sm overflow-hidden animate-fade-in">
               <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1522,6 +1739,177 @@ function AdminDashboard() {
                 </table>
               </div>
             </div>
+          ) : activeTab === "feedbacks" ? (
+            /* FEEDBACKS MANAGEMENT UI */
+            <div className="mt-6 rounded-3xl border border-border bg-card shadow-sm overflow-hidden animate-fade-in">
+              <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {language === "gu" ? "ગ્રાહક પ્રતિસાદ સંચાલન" : language === "hi" ? "ग्राहक प्रतिक्रिया प्रबंधन" : "Customer Feedback Management"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {language === "gu" 
+                      ? "વેબસાઇટ પર કઈ રેટિંગ અને સમીક્ષાઓ પ્રદર્શિત કરવી તે મંજૂર કરો અથવા છુપાવો." 
+                      : language === "hi" 
+                      ? "वेबसाइट पर कौन सी रेटिंग और समीक्षाएं प्रदर्शित करनी हैं उन्हें स्वीकृत या छुपाएं।" 
+                      : "Approve or hide which ratings and reviews are displayed on the website homepage."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                      <th className="p-4 w-20">Rating</th>
+                      <th className="p-4">Customer</th>
+                      <th className="p-4">Review / Comment</th>
+                      <th className="p-4 w-36 text-center">Status</th>
+                      <th className="p-4 w-36 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {feedbacksList.length > 0 ? (
+                      feedbacksList.map((fb) => (
+                        <tr key={fb.id} className="hover:bg-secondary/15 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-0.5 text-brand-gold font-bold">
+                              <span>{fb.rating}</span>
+                              <Star className="h-3.5 w-3.5 fill-brand-gold text-brand-gold" />
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="font-bold text-foreground">{fb.name}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{fb.company}</div>
+                          </td>
+                          <td className="p-4 text-xs text-muted-foreground max-w-md break-words" title={fb.comment}>
+                            <div>{fb.comment}</div>
+                            {hasProfanity(fb.comment) && (
+                              <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-600 border border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30">
+                                ⚠️ Review: Flagged Words Detected
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              fb.approved 
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50" 
+                                : "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 border border-yellow-200/50"
+                            }`}>
+                              {fb.approved ? "Approved" : "Pending Approval"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                onClick={() => handleToggleApproveFeedback(fb.id)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs font-bold"
+                              >
+                                {fb.approved ? "Hide" : "Approve"}
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteFeedback(fb.id)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                                title="Delete Review"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">
+                          {t("admin.noRecords")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* CUSTOMERS DIRECTORY PANEL */
+            <div className="mt-6 rounded-3xl border border-border bg-card shadow-sm overflow-hidden animate-fade-in">
+              <div className="p-6 border-b border-border bg-secondary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {language === "gu" ? "ઑફલાઇન ગ્રાહક ડિરેક્ટરી" : language === "hi" ? "ऑफ़लाइन ग्राहक निर्देशिका" : "Offline Customers Directory"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {language === "gu"
+                      ? "તમારા ઑફલાઇન જથ્થાબંધ ગ્રાહકોની વિગતો મેનેજ કરો."
+                      : language === "hi"
+                      ? "अपने ऑफ़लाइन थोक ग्राहकों के विवरण प्रबंधित करें।"
+                      : "Manage contact profiles for your offline wholesale distributors and paan-shop owners."}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setShowAddCustomerModal(true)}
+                  className="bg-primary text-primary-foreground hover:bg-brand-blue shadow-md font-semibold self-start sm:self-center"
+                >
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  {language === "gu" ? "નવો ગ્રાહક ઉમેરો" : language === "hi" ? "नया ग्राहक जोड़ें" : "Add Offline Customer"}
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                      <th className="p-4">Customer Name</th>
+                      <th className="p-4">Company / Shop</th>
+                      <th className="p-4">WhatsApp Number</th>
+                      <th className="p-4">Delivery Address</th>
+                      <th className="p-4 w-28 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {customersList.length > 0 ? (
+                      customersList.map((c) => (
+                        <tr key={c.id} className="hover:bg-secondary/15 transition-colors">
+                          <td className="p-4 font-bold text-foreground">{c.name}</td>
+                          <td className="p-4 text-xs font-semibold text-muted-foreground">{c.company}</td>
+                          <td className="p-4 text-xs font-bold text-brand-blue">
+                            <a href={`https://wa.me/${c.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="h-3.5 w-3.5 text-whatsapp">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.666.988 3.307 1.493 5.352 1.494 5.518 0 10.005-4.486 10.008-10.007.002-2.673-1.03-5.188-2.908-7.067C17.16 1.7 14.654.655 11.994.655 6.476.655 1.99 5.14 1.987 10.66c-.001 2.055.508 3.707 1.503 5.385l-.988 3.606 3.701-.971z" />
+                              </svg>
+                              +{c.phone}
+                            </a>
+                          </td>
+                          <td className="p-4 text-xs text-muted-foreground max-w-sm truncate" title={c.address}>
+                            {c.address || "N/A"}
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button
+                              onClick={() => handleDeleteCustomer(c.id)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                              title="Delete Customer Profile"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">
+                          {t("admin.noRecords")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       </section>
@@ -1536,7 +1924,37 @@ function AdminDashboard() {
             </div>
 
             <form onSubmit={handleAddSale} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
-              <div className="grid sm:grid-cols-2 gap-4">
+              {/* SAVED CUSTOMER SELECT */}
+              <div className="grid gap-1.5 bg-secondary/15 border border-border/60 p-3 rounded-2xl">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                  <User className="h-3.5 w-3.5 text-brand-blue" /> Choose Customer Profile (Optional Autofill)
+                </label>
+                <select
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    if (selectedVal === "custom") {
+                      setFormCompany("");
+                      setFormPhone("");
+                    } else {
+                      const selectedCust = customersList.find((c) => c.id === selectedVal);
+                      if (selectedCust) {
+                        setFormCompany(selectedCust.company);
+                        setFormPhone(selectedCust.phone);
+                      }
+                    }
+                  }}
+                  className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
+                >
+                  <option value="custom">-- Custom / Unsaved Entry --</option>
+                  {customersList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.company} ({c.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-4">
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                     <Building className="h-3 w-3" /> {t("admin.customerName")}
@@ -1547,6 +1965,22 @@ function AdminDashboard() {
                     placeholder="e.g. Ramesh Paan Agency"
                     value={formCompany}
                     onChange={(e) => setFormCompany(e.target.value)}
+                    className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
+                  />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3 w-3 text-brand-blue">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 0 1-7.108-7.108c-.155-.44.01-.928.387-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                    </svg>
+                    Phone / WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 919998421346"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
                     className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
                   />
                 </div>
@@ -1713,6 +2147,88 @@ function AdminDashboard() {
                   {t("admin.saveBill")}
                 </Button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD CUSTOMER MODAL */}
+      {showAddCustomerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
+            <button
+              onClick={() => setShowAddCustomerModal(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-full border border-border hover:bg-secondary/40 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors animate-fade-in"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Add New Offline Customer</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Register a wholesale customer's contact details for easy dispatch logging.</p>
+            </div>
+
+            <form onSubmit={handleAddCustomer} className="mt-6 space-y-4">
+              <div className="grid gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Contact / Owner Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rameshbhai Patel"
+                  value={custName}
+                  onChange={(e) => setCustName(e.target.value)}
+                  className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Company / Shop Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Janta Paan Bhandar"
+                  value={custCompany}
+                  onChange={(e) => setCustCompany(e.target.value)}
+                  className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  WhatsApp Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. 919998421346"
+                  value={custPhone}
+                  onChange={(e) => setCustPhone(e.target.value)}
+                  className="h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Delivery Address
+                </label>
+                <textarea
+                  placeholder="e.g. Sector-11, Gandhinagar"
+                  value={custAddress}
+                  onChange={(e) => setCustAddress(e.target.value)}
+                  rows={2}
+                  className="rounded-lg border border-border p-3 text-sm focus:outline-none focus:border-brand-gold/60 bg-background resize-none"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-brand-blue text-primary-foreground font-semibold py-2.5 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" /> Save Customer Profile
+              </Button>
             </form>
           </div>
         </div>

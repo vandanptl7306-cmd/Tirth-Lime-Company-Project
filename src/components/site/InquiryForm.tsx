@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Send } from "lucide-react";
+import { Send, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect, useMemo } from "react";
 
@@ -71,7 +71,11 @@ export function InquiryForm() {
     }
   }, [language, form]);
 
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success">("idle");
+
   function onSubmit(values: FormValues) {
+    setSubmitStatus("loading");
+
     const header = language === "gu" ? "*નવી જથ્થાબંધ પૂછપરછ — ખોડિયાર ઇન્ડસ્ટ્રી*" : 
                    language === "hi" ? "*नई थोक पूछताछ — खोदियार इंडस्ट्री*" :
                    "*New Bulk Inquiry — Khodiyar Industry*";
@@ -90,9 +94,21 @@ export function InquiryForm() {
       lines.push(`${t("form.labels.message")}: ${values.message.trim()}`);
     }
     const url = buildWaLink(lines.join("\n"));
-    window.open(url, "_blank", "noopener,noreferrer");
-    toast.success(t("form.toast"));
-    form.reset();
+
+    // Artificial compiler/compiling animation delay for B2B portal feedback
+    setTimeout(() => {
+      setSubmitStatus("success");
+      
+      setTimeout(() => {
+        window.open(url, "_blank", "noopener,noreferrer");
+        toast.success(t("form.toast"));
+        form.reset();
+        
+        setTimeout(() => {
+          setSubmitStatus("idle");
+        }, 1000);
+      }, 1000);
+    }, 1500);
   }
 
   return (
@@ -276,13 +292,58 @@ export function InquiryForm() {
         <Button
           type="submit"
           size="lg"
-          className="relative overflow-hidden bg-brand-gold text-primary hover:bg-brand-gold/90 font-semibold"
+          disabled={submitStatus !== "idle"}
+          className={`relative overflow-hidden font-semibold transition-all duration-300 ${
+            submitStatus === "success"
+              ? "bg-emerald-600 hover:bg-emerald-600 text-white scale-[1.02]"
+              : "bg-brand-gold text-primary hover:bg-brand-gold/90"
+          }`}
         >
           {/* Button shimmer element */}
-          <span className="absolute inset-0 w-[30%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-[150%] btn-sheen pointer-events-none" />
+          {submitStatus === "idle" && (
+            <span className="absolute inset-0 w-[30%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-[150%] btn-sheen pointer-events-none" />
+          )}
+
+          {/* SVG Particle Star Burst Elements */}
+          {submitStatus === "success" && (
+            <div className="absolute inset-0 pointer-events-none overflow-visible">
+              {[...Array(8)].map((_, i) => (
+                <svg
+                  key={i}
+                  className={`absolute h-3 w-3 text-brand-gold fill-current animate-burst-particle-${i + 1}`}
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    marginLeft: "-6px",
+                    marginTop: "-6px",
+                  }}
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              ))}
+            </div>
+          )}
+
           <span className="relative z-10 flex items-center justify-center">
-            <Send className="mr-2 h-4 w-4" />
-            {t("form.submit")}
+            {submitStatus === "idle" && (
+              <>
+                <Send className="mr-2 h-4 w-4 animate-pulse" />
+                {t("form.submit")}
+              </>
+            )}
+            {submitStatus === "loading" && (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {language === "gu" ? "પૂછપરછ તૈયાર થઈ રહી છે..." : language === "hi" ? "पूछताछ तैयार हो रही है..." : "Compiling Inquiry..."}
+              </>
+            )}
+            {submitStatus === "success" && (
+              <>
+                <Check className="mr-2 h-4 w-4 animate-bounce" />
+                {language === "gu" ? "વાટ્સએપ લોંચ થઈ રહ્યું છે..." : language === "hi" ? "व्हाट्सएप लॉन्च हो रहा है..." : "Redirecting to WhatsApp..."}
+              </>
+            )}
           </span>
         </Button>
         <p className="text-xs text-muted-foreground">

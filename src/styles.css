@@ -223,3 +223,55 @@
   border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
 }
+
+/* Premium Gold Particle Burst Animations */
+.animate-burst-particle-1 { animation: burst-1 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-2 { animation: burst-2 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-3 { animation: burst-3 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-4 { animation: burst-4 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-5 { animation: burst-5 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-6 { animation: burst-6 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-7 { animation: burst-7 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+.animate-burst-particle-8 { animation: burst-8 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+
+@keyframes burst-1 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-70px, -60px) scale(1.1) rotate(140deg); opacity: 0; }
+}
+@keyframes burst-2 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(70px, -65px) scale(1.1) rotate(-140deg); opacity: 0; }
+}
+@keyframes burst-3 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-75px, 60px) scale(1.1) rotate(-140deg); opacity: 0; }
+}
+@keyframes burst-4 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(75px, 65px) scale(1.1) rotate(140deg); opacity: 0; }
+}
+@keyframes burst-5 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(0px, -90px) scale(1.1) rotate(90deg); opacity: 0; }
+}
+@keyframes burst-6 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(0px, 90px) scale(1.1) rotate(-90deg); opacity: 0; }
+}
+@keyframes burst-7 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-100px, 0px) scale(1.1) rotate(180deg); opacity: 0; }
+}
+@keyframes burst-8 {
+  0% { transform: translate(0, 0) scale(0.1) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(100px, 0px) scale(1.1) rotate(-180deg); opacity: 0; }
+}
+
