@@ -12,7 +12,7 @@ import {
   Map,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
@@ -23,7 +23,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
-import whatsappVideo from "@/assets/WhatsApp Video 2026-06-27 at 12.57.53 PM.mp4";
+import whatsappVideo from "@/assets/whatsapp-bg.mp4";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -61,6 +61,18 @@ const renderSplitText = (text: string) => {
 
 function Home() {
   const { t, language } = useLanguage();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.play().catch((err) => {
+        console.log("Autoplay failed or was blocked:", err);
+      });
+    }
+  }, []);
 
   let waInquireMsg = "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.";
   if (language === "gu") {
@@ -412,10 +424,12 @@ function Home() {
       {/* Loop Background WhatsApp Video */}
       <div className="fixed inset-0 -z-20 w-full h-screen pointer-events-none overflow-hidden select-none print:hidden bg-slate-950">
         <video
+          ref={videoRef}
           src={whatsappVideo}
           autoPlay
           loop
           muted
+          defaultMuted
           playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-[0.15] dark:opacity-[0.08]"
         />
