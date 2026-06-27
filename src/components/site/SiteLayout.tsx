@@ -9,7 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function SiteLayout({ children }: { children: ReactNode }) {
+export function SiteLayout({ children, className = "bg-background" }: { children: ReactNode; className?: string }) {
   useEffect(() => {
     // Initialize Lenis Smooth Scroll on client
     const lenis = new Lenis({
@@ -39,7 +39,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className={`flex min-h-screen flex-col ${className}`}>
       <div className="print:hidden">
         <SiteHeader />
       </div>

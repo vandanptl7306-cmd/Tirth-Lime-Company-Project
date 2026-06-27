@@ -23,7 +23,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
-import whatsappVideo from "@/assets/whatsapp-bg.mp4";
+
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -72,6 +72,13 @@ function Home() {
         console.log("Autoplay failed or was blocked:", err);
       });
     }
+
+    // Make body background transparent to reveal fixed video at negative z-index
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "transparent";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
   }, []);
 
   let waInquireMsg = "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.";
@@ -420,21 +427,22 @@ function Home() {
   ];
 
   return (
-    <SiteLayout>
+    <SiteLayout className="bg-transparent">
       {/* Loop Background WhatsApp Video */}
-      <div className="fixed inset-0 -z-20 w-full h-screen pointer-events-none overflow-hidden select-none print:hidden bg-slate-950">
+      <div className="fixed inset-0 -z-20 w-full h-screen pointer-events-none overflow-hidden select-none print:hidden bg-slate-50 dark:bg-slate-950">
         <video
           ref={videoRef}
-          src={whatsappVideo}
+          src="/whatsapp-bg.mp4"
           autoPlay
           loop
           muted
-          defaultMuted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.15] dark:opacity-[0.08]"
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.55] dark:opacity-[0.45]"
         />
-        {/* Semi-transparent dark overlay to ensure maximum content readability */}
-        <div className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/60 backdrop-blur-[0.5px]" />
+        {/* Semi-transparent adaptive overlay to ensure maximum content readability */}
+        <div className="absolute inset-0 bg-white/40 dark:bg-slate-950/50 backdrop-blur-[0.5px]" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white dark:from-slate-950 to-transparent opacity-90" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white dark:from-slate-950 to-transparent" />
       </div>
 
       {/* HERO */}
@@ -789,7 +797,7 @@ function Home() {
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:col-span-3">
+          <div className="inquiry-form-card rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:col-span-3">
             <h2 className="text-2xl font-bold text-foreground">{t("inquirySection.formTitle")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {t("inquirySection.formDesc")}
