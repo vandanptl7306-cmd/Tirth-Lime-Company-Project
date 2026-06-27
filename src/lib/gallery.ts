@@ -8,6 +8,7 @@ import chunaYellowImg from "@/assets/chuna-yellow.jpg";
 export type GallerySlide = {
   id: string;
   img: string;
+  type?: "image" | "video";
   title: {
     en: string;
     gu: string;

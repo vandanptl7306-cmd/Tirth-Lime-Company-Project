@@ -321,6 +321,7 @@ function AdminDashboard() {
 
   // Form states for gallery slides
   const [slideImg, setSlideImg] = useState("");
+  const [slideType, setSlideType] = useState<"image" | "video">("image");
   const [slideEnTitle, setSlideEnTitle] = useState("");
   const [slideGuTitle, setSlideGuTitle] = useState("");
   const [slideHiTitle, setSlideHiTitle] = useState("");
@@ -523,6 +524,7 @@ function AdminDashboard() {
   const resetSlideForm = () => {
     setEditingSlide(null);
     setSlideImg("");
+    setSlideType("image");
     setSlideEnTitle("");
     setSlideGuTitle("");
     setSlideHiTitle("");
@@ -534,13 +536,14 @@ function AdminDashboard() {
   const handleAddOrEditSlide = (e: React.FormEvent) => {
     e.preventDefault();
     if (!slideImg || !slideEnTitle) {
-      alert("Image and English title are required.");
+      alert("Media and English title are required.");
       return;
     }
 
     const updatedSlide: GallerySlide = {
       id: editingSlide ? editingSlide.id : "slide_" + Date.now(),
       img: slideImg,
+      type: slideType,
       title: {
         en: slideEnTitle,
         gu: slideGuTitle || slideEnTitle,
@@ -570,6 +573,7 @@ function AdminDashboard() {
   const handleEditSlideClick = (slide: GallerySlide) => {
     setEditingSlide(slide);
     setSlideImg(slide.img);
+    setSlideType(slide.type || "image");
     setSlideEnTitle(slide.title.en);
     setSlideGuTitle(slide.title.gu);
     setSlideHiTitle(slide.title.hi);
@@ -1450,12 +1454,21 @@ function AdminDashboard() {
                       gallery.map((slide) => (
                         <tr key={slide.id} className="hover:bg-secondary/15 transition-colors">
                           <td className="p-4">
-                            <div className="h-12 w-16 rounded-xl overflow-hidden border border-border bg-secondary">
-                              <img
-                                src={slide.img}
-                                alt="Slide"
-                                className="h-full w-full object-cover"
-                              />
+                            <div className="h-12 w-16 rounded-xl overflow-hidden border border-border bg-secondary flex items-center justify-center">
+                              {slide.type === "video" ? (
+                                <video
+                                  src={slide.img}
+                                  className="h-full w-full object-cover"
+                                  muted
+                                  playsInline
+                                />
+                              ) : (
+                                <img
+                                  src={slide.img}
+                                  alt="Slide"
+                                  className="h-full w-full object-cover"
+                                />
+                              )}
                             </div>
                           </td>
                           <td className="p-4">
@@ -2240,26 +2253,69 @@ function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* PHOTO SOURCE selection */}
+                {/* MEDIA TYPE selection */}
+                <div className="grid gap-2 p-3 bg-secondary/15 rounded-2xl border border-border/60">
+                  <label className="text-xs font-bold text-primary block uppercase tracking-wider">Media Type</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="slideType"
+                        value="image"
+                        checked={slideType === "image"}
+                        onChange={() => {
+                          setSlideType("image");
+                          setSlideImg("");
+                        }}
+                      />
+                      Photo / Image
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="slideType"
+                        value="video"
+                        checked={slideType === "video"}
+                        onChange={() => {
+                          setSlideType("video");
+                          setSlideImg("");
+                        }}
+                      />
+                      Video
+                    </label>
+                  </div>
+                </div>
+
+                {/* MEDIA SOURCE selection */}
                 <div className="grid gap-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    {t("admin.productImage")}
+                    {slideType === "video" ? "Video Source" : "Photo Source"}
                   </label>
                   <div className="flex gap-4 items-center">
                     <div className="h-20 w-20 rounded-2xl border border-border overflow-hidden bg-secondary shrink-0 relative flex items-center justify-center">
                       {slideImg ? (
-                        <img src={slideImg} alt="Preview" className="h-full w-full object-cover" />
+                        slideType === "video" ? (
+                          <video src={slideImg} className="h-full w-full object-cover animate-pulse" muted playsInline />
+                        ) : (
+                          <img src={slideImg} alt="Preview" className="h-full w-full object-cover" />
+                        )
                       ) : (
-                        <span className="text-[10px] text-muted-foreground font-bold text-center">No Photo</span>
+                        <span className="text-[10px] text-muted-foreground font-bold text-center">
+                          {slideType === "video" ? "No Video" : "No Photo"}
+                        </span>
                       )}
                     </div>
                     <div className="flex-1 grid gap-2">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={slideType === "video" ? "video/*" : "image/*"}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            if (slideType === "video" && file.size > 25 * 1024 * 1024) {
+                              alert("Video file is too large. Please use a video under 25MB or paste a direct video link.");
+                              return;
+                            }
                             const reader = new FileReader();
                             reader.onloadend = () => {
                               setSlideImg(reader.result as string);
@@ -2273,7 +2329,7 @@ function AdminDashboard() {
                         <span className="text-[10px] text-muted-foreground">OR URL:</span>
                         <input
                           type="text"
-                          placeholder="Paste direct image link..."
+                          placeholder={slideType === "video" ? "Paste direct video link..." : "Paste direct image link..."}
                           value={slideImg.startsWith("data:") ? "" : slideImg}
                           onChange={(e) => setSlideImg(e.target.value)}
                           className="h-7 rounded-md border border-border px-2 text-[10px] focus:outline-none focus:border-brand-gold/60 bg-background flex-1"

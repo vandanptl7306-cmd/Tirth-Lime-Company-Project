@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, X, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
@@ -181,11 +181,22 @@ function AboutPage() {
                   onMouseLeave={() => setIsAutoplayPaused(false)}
                   onClick={() => setLightboxOpen(true)}
                 >
-                  <img
-                    src={slides[currentIdx]?.img}
-                    alt={slides[currentIdx]?.title[language] || slides[currentIdx]?.title["en"]}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  {slides[currentIdx]?.type === "video" ? (
+                    <video
+                      src={slides[currentIdx]?.img}
+                      className="h-full w-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={slides[currentIdx]?.img}
+                      alt={slides[currentIdx]?.title[language] || slides[currentIdx]?.title["en"]}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
                   
                   {/* Bottom Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex flex-col justify-end p-6 text-white opacity-95 transition-opacity duration-300">
@@ -238,11 +249,25 @@ function AboutPage() {
                             : "border-border/60 hover:border-brand-blue/50 opacity-60 hover:opacity-100"
                         }`}
                       >
-                        <img 
-                          src={slide.img} 
-                          alt="Thumbnail" 
-                          className="h-full w-full object-cover"
-                        />
+                        {slide.type === "video" ? (
+                          <div className="relative h-full w-full">
+                            <video 
+                              src={slide.img} 
+                              className="h-full w-full object-cover"
+                              muted
+                              playsInline
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                              <Play className="h-5 w-5 text-white opacity-85" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img 
+                            src={slide.img} 
+                            alt="Thumbnail" 
+                            className="h-full w-full object-cover"
+                          />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -327,11 +352,20 @@ function AboutPage() {
             className="relative max-w-4xl max-h-[85vh] flex flex-col items-center gap-4 bg-slate-900/40 p-4 rounded-3xl border border-white/10 shadow-2xl transition-all scale-100 animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={slides[currentIdx]?.img}
-              alt={slides[currentIdx]?.title[language] || slides[currentIdx]?.title["en"]}
-              className="max-w-full max-h-[70vh] object-contain rounded-2xl border border-white/5"
-            />
+            {slides[currentIdx]?.type === "video" ? (
+              <video
+                src={slides[currentIdx]?.img}
+                controls
+                autoPlay
+                className="max-w-full max-h-[70vh] object-contain rounded-2xl border border-white/5 bg-black"
+              />
+            ) : (
+              <img
+                src={slides[currentIdx]?.img}
+                alt={slides[currentIdx]?.title[language] || slides[currentIdx]?.title["en"]}
+                className="max-w-full max-h-[70vh] object-contain rounded-2xl border border-white/5"
+              />
+            )}
             
             {/* Localized Details inside big screen view */}
             <div className="w-full text-center text-white px-6 pb-2 select-none">
