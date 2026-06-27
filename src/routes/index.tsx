@@ -23,6 +23,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
+import whatsappVideo from "@/assets/WhatsApp Video 2026-06-27 at 12.57.53 PM.mp4";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -408,6 +409,20 @@ function Home() {
 
   return (
     <SiteLayout>
+      {/* Loop Background WhatsApp Video */}
+      <div className="fixed inset-0 -z-20 w-full h-screen pointer-events-none overflow-hidden select-none print:hidden bg-slate-950">
+        <video
+          src={whatsappVideo}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.15] dark:opacity-[0.08]"
+        />
+        {/* Semi-transparent dark overlay to ensure maximum content readability */}
+        <div className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/60 backdrop-blur-[0.5px]" />
+      </div>
+
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div
