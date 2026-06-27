@@ -9,6 +9,7 @@ export function SiteFooter() {
   const QUICK_LINKS = [
     ["/products", t("nav.products")],
     ["/quality", t("nav.quality")],
+    ["/ingredients", t("nav.ingredients")],
     ["/about", t("nav.about")],
     ["/contact", t("nav.contact")],
     ["/admin", "Admin Panel"],

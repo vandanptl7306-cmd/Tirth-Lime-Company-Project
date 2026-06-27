@@ -16,6 +16,9 @@ import {
   Printer,
   X,
   FileSpreadsheet,
+  Lock,
+  User,
+  LogOut,
 } from "lucide-react";
 import {
   AreaChart,
@@ -227,8 +230,45 @@ const CustomChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 function AdminDashboard() {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const queryClient = useQueryClient();
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const sessionAuth = sessionStorage.getItem("khodiyar_admin_auth");
+      const localAuth = localStorage.getItem("khodiyar_admin_auth");
+      return sessionAuth === "true" || localAuth === "true";
+    }
+    return false;
+  });
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (usernameInput.trim() === "admin" && passwordInput === "TirthLime@2026") {
+      setIsAuthenticated(true);
+      setLoginError("");
+      if (rememberMe) {
+        localStorage.setItem("khodiyar_admin_auth", "true");
+      } else {
+        sessionStorage.setItem("khodiyar_admin_auth", "true");
+      }
+      toast.success(language === "gu" ? "સફળતાપૂર્વક લોગિન થયું!" : language === "hi" ? "सफलतापूर्वक लॉगिन हुआ!" : "Successfully signed in!");
+    } else {
+      setLoginError(t("admin.loginError"));
+      toast.error(t("admin.loginError"));
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem("khodiyar_admin_auth");
+    localStorage.removeItem("khodiyar_admin_auth");
+    toast.success(language === "gu" ? "લૉગ આઉટ થયા!" : language === "hi" ? "लॉग आउट किया गया!" : "Logged out successfully.");
+  };
 
   const { data: sales = [], isLoading: salesLoading } = useQuery<Sale[]>({
     queryKey: ["sales"],
@@ -320,75 +360,6 @@ function AdminDashboard() {
     setMounted(true);
   }, []);
 
-  // Real-time client simulator hook (simulates incoming WhatsApp orders in real-time)
-  useEffect(() => {
-    if (!mounted) return;
-
-    const companies = [
-      "Janta Paan Center, Anand",
-      "Shree Hari Agency, Nadiad",
-      "Krishna Paan House, Surat",
-      "Balaji Lime Dist., Rajkot",
-      "Maruti Paan Bhandar, Ahmedabad",
-      "Rajasthan Lime Traders, Udaipur",
-      "Ambika Paan Shop, Vadodara",
-    ];
-
-    const productsList = [
-      { name: "Tirth Chuna Parcel (White — Medium)", price: 300 },
-      { name: "Riddhi Siddhi Chuna Parcel (Yellow — Packing)", price: 600 },
-      { name: "Tirth Chuna Parcel (Yellow — Ghata)", price: 350 },
-      { name: "Riddhi Siddhi Chuna Parcel (Yellow — Loose)", price: 450 },
-      { name: "Tirth Chuna Parcel (White — Ghata)", price: 325 },
-    ];
-
-    const interval = setInterval(() => {
-      const randomCompany = companies[Math.floor(Math.random() * companies.length)];
-      const randomProd = productsList[Math.floor(Math.random() * productsList.length)];
-      const randomQty = Math.floor(Math.random() * 8 + 2) * 10; // 20 to 90 boxes
-      const total = randomQty * randomProd.price;
-
-      const newSale: Sale = {
-        id: "s_" + Date.now(),
-        date: new Date().toISOString().split("T")[0],
-        company: randomCompany,
-        items: [
-          {
-            product: randomProd.name,
-            packSize: Math.random() > 0.5 ? "12x1 pack" : "24x1 pack",
-            quantity: randomQty,
-            price: randomProd.price,
-            total: total,
-          },
-        ],
-        revenue: total,
-        status: "Pending",
-      };
-
-      const stored = localStorage.getItem("khodiyar_sales_data");
-      let currentSales: Sale[] = [];
-      if (stored) {
-        try {
-          currentSales = JSON.parse(stored);
-        } catch {
-          currentSales = [];
-        }
-      }
-      const updatedSales = [newSale, ...currentSales];
-      localStorage.setItem("khodiyar_sales_data", JSON.stringify(updatedSales));
-
-      // Trigger cache invalidation so the dashboard updates in real-time!
-      queryClient.invalidateQueries({ queryKey: ["sales"] });
-
-      // Notify admin
-      toast.info(`🔔 Real-Time Order Stream: New wholesale inquiry from "${randomCompany}" for ₹${total.toLocaleString("en-IN")}!`, {
-        duration: 8000,
-        position: "top-right"
-      });
-    }, 45000); // Trigger every 45 seconds
-
-    return () => clearInterval(interval);
-  }, [mounted, queryClient]);
 
   const saveSales = (newSales: Sale[]) => {
     salesMutation.mutate(newSales);
@@ -739,6 +710,145 @@ function AdminDashboard() {
     return matchesStatus && matchesSearch;
   });
 
+  if (!isAuthenticated) {
+    return (
+      <SiteLayout>
+        <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-secondary/30 via-background to-secondary/20">
+          <div className="max-w-md w-full space-y-8 p-8 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-2xl relative overflow-hidden animate-scale-in">
+            {/* Background design elements */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-brand-gold/10 blur-2xl" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-brand-blue/10 blur-2xl" />
+            
+            <div className="relative space-y-6">
+              <div className="text-center">
+                <div className="mx-auto h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-blue flex items-center justify-center text-white shadow-lg">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground">
+                  {t("admin.loginTitle")}
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t("admin.loginSubtitle")}
+                </p>
+              </div>
+
+              {loginError && (
+                <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold text-center flex items-center justify-center gap-2 animate-pulse">
+                  <span className="h-2 w-2 rounded-full bg-destructive" />
+                  {loginError}
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="mt-8 space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      {t("admin.usernameLabel")}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground/60">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        placeholder={t("admin.usernamePlaceholder")}
+                        className="block w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-border focus:outline-none focus:border-brand-gold/60 bg-background/50 focus:bg-background transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      {t("admin.passwordLabel")}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground/60">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="password"
+                        required
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        placeholder={t("admin.passwordPlaceholder")}
+                        className="block w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-border focus:outline-none focus:border-brand-gold/60 bg-background/50 focus:bg-background transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-border text-brand-gold focus:ring-brand-gold/40 h-4 w-4 accent-brand-gold"
+                    />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {t("admin.rememberMe")}
+                    </span>
+                  </label>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-brand-blue text-primary-foreground font-semibold py-2.5 rounded-xl shadow-lg hover:shadow-brand-blue/10 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{t("admin.loginButton")}</span>
+                  </Button>
+                </div>
+              </form>
+
+              {/* Language Selection */}
+              <div className="pt-6 border-t border-border/50">
+                <div className="flex gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("en")}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors border ${
+                      language === "en"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-secondary/40"
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("gu")}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors border ${
+                      language === "gu"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-secondary/40"
+                    }`}
+                  >
+                    ગુજરાતી
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("hi")}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors border ${
+                      language === "hi"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-secondary/40"
+                    }`}
+                  >
+                    हिन्दी
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SiteLayout>
+    );
+  }
+
   return (
     <SiteLayout>
       <section className="bg-secondary/40 py-12 border-b border-border/60 print:hidden">
@@ -769,6 +879,13 @@ function AdminDashboard() {
               className="bg-primary text-primary-foreground hover:bg-brand-blue shadow-md font-semibold"
             >
               <Plus className="mr-2 h-5 w-5" /> {t("admin.addOfflineBill")}
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive shadow-sm font-semibold flex items-center gap-1.5"
+            >
+              <LogOut className="h-4 w-4" /> {t("admin.logoutButton")}
             </Button>
           </div>
         </div>

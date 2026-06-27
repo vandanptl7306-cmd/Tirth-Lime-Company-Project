@@ -23,7 +23,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import factoryImg from "@/assets/factory.jpg";
 import chunaWhite from "@/assets/chuna-white.jpg";
 import chunaYellow from "@/assets/chuna-yellow.jpg";
-import { IngredientsSection } from "@/components/site/IngredientsSection";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -328,6 +327,8 @@ function Home() {
           },
         }
       );
+
+
     });
 
     return () => ctx.revert();
@@ -550,8 +551,7 @@ function Home() {
         </div>
       </section>
 
-      {/* INGREDIENTS */}
-      <IngredientsSection />
+
 
       {/* PRODUCTS */}
       <section id="products" className="py-20">
