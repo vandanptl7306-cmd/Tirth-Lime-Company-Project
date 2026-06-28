@@ -12,23 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import logoImg from "@/assets/logo.png";
 
 function Logo() {
-  const { t } = useLanguage();
   return (
-    <Link to="/" className="flex items-center gap-2 group">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm">
-        K
-        <span className="absolute h-1.5 w-1.5 -translate-y-3 translate-x-3 rounded-full bg-brand-gold" />
-      </div>
-      <div className="leading-tight">
-        <div className="text-base font-bold text-foreground sm:text-lg">
-          {t("logo.title")} <span className="text-brand-gold">Industry</span>
-        </div>
-        <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-          {t("logo.subtitle")}
-        </div>
-      </div>
+    <Link to="/" className="flex items-center gap-2 group py-1">
+      <img
+        src={logoImg}
+        alt="KHODIYAR GRUH UDHYOG"
+        className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-102"
+      />
     </Link>
   );
 }
@@ -37,10 +30,10 @@ function LanguageSelector({ className }: { className?: string }) {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+    <div className={`flex items-center gap-1.5 ${className}`}>
+      <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
-        <SelectTrigger className="h-9 w-[125px] bg-background">
+        <SelectTrigger className="h-8 w-[105px] text-xs bg-background py-1 px-2">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -19,8 +19,8 @@ export function SiteFooter() {
     <footer className="mt-20 border-t border-border bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-2">
-          <div className="text-xl font-bold">
-            {t("logo.title")} <span className="text-brand-gold">Industry</span>
+          <div className="text-xl font-bold tracking-wide">
+            {t("logo.title")}
           </div>
           <p className="mt-3 max-w-md text-sm text-primary-foreground/75">
             {t("footer.desc")}
@@ -71,7 +71,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-primary-foreground/10">
         <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-primary-foreground/60 sm:px-6 lg:px-8">
-          © {new Date().getFullYear()} {t("logo.title")} Industry. {t("footer.rights")}
+          © {new Date().getFullYear()} {t("logo.title")}. {t("footer.rights")}
         </div>
       </div>
     </footer>

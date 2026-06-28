@@ -14,13 +14,13 @@ gsap.registerPlugin(ScrollTrigger);
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Khodiyar Industry — Edible Chuna Manufacturer" },
+      { title: "About KHODIYAR GRUH UDHYOG — Edible Chuna Manufacturer" },
       {
         name: "description",
         content:
-          "Khodiyar Industry manufactures edible chuna with a focus on purity, hygiene and reliable B2B supply across India.",
+          "KHODIYAR GRUH UDHYOG manufactures edible chuna with a focus on purity, hygiene and reliable B2B supply across India.",
       },
-      { property: "og:title", content: "About Khodiyar Industry" },
+      { property: "og:title", content: "About KHODIYAR GRUH UDHYOG" },
       {
         property: "og:description",
         content:

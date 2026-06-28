@@ -38,6 +38,7 @@ import {
 } from "recharts";
 
 import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/logo.png";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { PRODUCTS, getStoredProducts, saveStoredProducts, buildWaLink, type Product } from "@/lib/products";
@@ -50,7 +51,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Sales & Operations Dashboard — Khodiyar Industry" },
+      { title: "Admin Sales & Operations Dashboard — KHODIYAR GRUH UDHYOG" },
       {
         name: "description",
         content: "Track wholesale orders, sales growth, product distribution, and transaction statuses.",
@@ -239,6 +240,28 @@ const CustomChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
+function numberToWords(num: number): string {
+  const a = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  if (num === 0) return "Zero";
+  
+  function g(n: number): string {
+    if (n === 0) return "";
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
+    if (n < 1000) return a[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + g(n % 100) : "");
+    if (n < 100000) return g(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + g(n % 1000) : "");
+    if (n < 10000000) return g(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + g(n % 100000) : "");
+    return g(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + g(n % 10000000) : "");
+  }
+  
+  return (g(num) + " Rupees Only").toUpperCase();
+}
+
 function AdminDashboard() {
   const { t, language, setLanguage } = useLanguage();
   const queryClient = useQueryClient();
@@ -381,6 +404,21 @@ function AdminDashboard() {
     setFeedbacksList(getStoredFeedback());
     setCustomersList(getStoredCustomers());
   }, []);
+
+  useEffect(() => {
+    const shouldStop = showAddModal || activeInvoice || showAddProductModal || showAddSlideModal;
+    if (shouldStop) {
+      (window as any).lenis?.stop();
+      document.body.style.overflow = "hidden";
+    } else {
+      (window as any).lenis?.start();
+      document.body.style.overflow = "";
+    }
+    return () => {
+      (window as any).lenis?.start();
+      document.body.style.overflow = "";
+    };
+  }, [showAddModal, activeInvoice, showAddProductModal, showAddSlideModal]);
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -701,7 +739,7 @@ function AdminDashboard() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Khodiyar_Industry_Sales_Registry_${new Date().toISOString().split("T")[0]}.csv`;
+      link.download = `KHODIYAR_GRUH_UDHYOG_Sales_Registry_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -850,7 +888,7 @@ function AdminDashboard() {
   const reorderReminders = calculateReorderReminders();
 
   const handleSendReminderMessage = (reminder: { company: string; lastDate: string; daysAgo: number; phone: string; product: string }) => {
-    const text = `Hello ${reminder.company}, this is Sanjay Patel from Khodiyar Industry. We noticed it has been ${reminder.daysAgo} days since your last order of ${reminder.product}. Would you like to review your stock and place a new bulk order?`;
+    const text = `Hello ${reminder.company}, this is Sanjay Patel from KHODIYAR GRUH UDHYOG. We noticed it has been ${reminder.daysAgo} days since your last order of ${reminder.product}. Would you like to review your stock and place a new bulk order?`;
     const cleanPhone = reminder.phone.replace(/[^0-9]/g, "");
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -994,6 +1032,71 @@ function AdminDashboard() {
       </SiteLayout>
     );
   }
+
+  const handlePrint = () => {
+    const printContent = document.getElementById("print-invoice-area");
+    if (!printContent) return;
+
+    try {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        window.print();
+        return;
+      }
+
+      let stylesHtml = "";
+      document.querySelectorAll("style, link[rel='stylesheet']").forEach((el) => {
+        stylesHtml += el.outerHTML;
+      });
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Invoice - KHODIYAR GRUH UDHYOG</title>
+            ${stylesHtml}
+            <style>
+              body {
+                background: white !important;
+                color: black !important;
+                padding: 20px !important;
+                margin: 0 !important;
+              }
+              .print-hidden, button, .absolute.top-4.right-4 {
+                display: none !important;
+              }
+              #print-invoice-area {
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div>
+              ${printContent.innerHTML}
+            </div>
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                  setTimeout(function() {
+                    window.close();
+                  }, 500);
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (e) {
+      window.print();
+    }
+  };
 
   return (
     <SiteLayout>
@@ -1916,14 +2019,14 @@ function AdminDashboard() {
 
       {/* ADD SALE MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+        <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
           <div className="bg-card w-full max-w-2xl rounded-3xl border border-border p-6 shadow-2xl relative max-h-[90vh] flex flex-col justify-between overflow-hidden animate-scale-in">
             <div>
               <h3 className="text-xl font-bold text-foreground">{t("admin.logBillTitle")}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{t("admin.logBillDesc")}</p>
             </div>
 
-            <form onSubmit={handleAddSale} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
+            <form data-lenis-prevent onSubmit={handleAddSale} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
               {/* SAVED CUSTOMER SELECT */}
               <div className="grid gap-1.5 bg-secondary/15 border border-border/60 p-3 rounded-2xl">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
@@ -2154,7 +2257,7 @@ function AdminDashboard() {
 
       {/* ADD CUSTOMER MODAL */}
       {showAddCustomerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+        <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center bg-primary-foreground/30 bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl relative animate-scale-in">
             <button
               onClick={() => setShowAddCustomerModal(false)}
@@ -2236,7 +2339,7 @@ function AdminDashboard() {
 
       {/* ADD/EDIT PRODUCT MODAL */}
       {showAddProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+        <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
           <div className="bg-card w-full max-w-lg rounded-3xl border border-border p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden animate-scale-in">
             <div>
               <h3 className="text-xl font-bold text-foreground">
@@ -2247,7 +2350,7 @@ function AdminDashboard() {
               </p>
             </div>
 
-            <form onSubmit={handleAddOrEditProduct} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
+            <form data-lenis-prevent onSubmit={handleAddOrEditProduct} className="mt-4 overflow-y-auto flex-1 pr-1 space-y-4 py-2">
               <div className="grid gap-4">
                 
                 {/* NAME */}
@@ -2406,178 +2509,362 @@ function AdminDashboard() {
       )}
 
       {/* PRINT INVOICE MODAL & TEMPLATE */}
-      {activeInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 print:bg-white print:p-0 print:block print:absolute print:top-0 print:left-0 print:w-full print:h-auto">
-          <style>{`
-            @media print {
-              body {
-                background: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 0 !important;
+      {activeInvoice && (() => {
+        const customerInfo = customersList.find((c) => c.company === activeInvoice.company);
+        return (
+          <div data-lenis-prevent className="print-invoice-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto print:bg-white print:p-0 print:block print:absolute print:top-0 print:left-0 print:w-full print:h-auto animate-fade-in">
+            <style>{`
+              @media print {
+                body, html {
+                  background: white !important;
+                  color: black !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  height: auto !important;
+                  overflow: visible !important;
+                }
+                .print-invoice-overlay {
+                  position: absolute !important;
+                  top: 0 !important;
+                  left: 0 !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  background: white !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                  display: block !important;
+                  z-index: 99999 !important;
+                  backdrop-filter: none !important;
+                  filter: none !important;
+                  opacity: 1 !important;
+                  animation: none !important;
+                  transform: none !important;
+                }
+                #print-invoice-area {
+                  border: none !important;
+                  box-shadow: none !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  background: white !important;
+                  color: black !important;
+                  display: block !important;
+                }
+                /* Hide screen-only interactive controls during print */
+                .print-hidden,
+                button,
+                .absolute.top-4.right-4,
+                [role="status"] {
+                  display: none !important;
+                }
               }
-              body * {
-                visibility: hidden !important;
-              }
-              #print-invoice-area, #print-invoice-area * {
-                visibility: visible !important;
-              }
-              #print-invoice-area {
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: auto !important;
-                background: white !important;
-                color: black !important;
-                padding: 16px !important;
-                border: none !important;
-                box-shadow: none !important;
-                margin: 0 !important;
-              }
-            }
-          `}</style>
+            `}</style>
 
-          <div
-            id="print-invoice-area"
-            className="bg-card w-full max-w-2xl rounded-3xl border border-border p-8 shadow-2xl relative flex flex-col justify-between print:border-none print:shadow-none print:max-w-none print:rounded-none"
-          >
-            {/* Screen Close Button */}
-            <button
-              onClick={() => setActiveInvoice(null)}
-              className="absolute top-4 right-4 h-9 w-9 rounded-full bg-secondary hover:bg-secondary-foreground/10 flex items-center justify-center text-muted-foreground transition-colors print:hidden"
-              title={t("admin.close")}
+            <div
+              id="print-invoice-area"
+              className="bg-card w-full max-w-3xl rounded-3xl border border-border p-6 shadow-2xl relative flex flex-col justify-between print:border-none print:shadow-none print:max-w-none print:rounded-none"
             >
-              <X className="h-5 w-5" />
-            </button>
+              {/* Screen Close Button */}
+              <button
+                onClick={() => setActiveInvoice(null)}
+                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-secondary hover:bg-secondary-foreground/10 flex items-center justify-center text-muted-foreground transition-colors print:hidden"
+                title={t("admin.close")}
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-            <div>
-              {/* Header Info */}
-              <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-4 pb-6 border-b border-border">
-                <div className="leading-tight">
-                  <div className="text-2xl font-black text-foreground">
-                    {t("admin.companyInfoName")}
+              <div className="border border-slate-950 p-4 bg-white text-slate-900 text-xs font-sans print:border print:p-4 rounded-2xl print:rounded-none">
+                
+                {/* Header Box */}
+                <div className="grid grid-cols-12 items-center border-b border-slate-950 pb-4 gap-4">
+                  
+                  {/* Left Badge: Tirth */}
+                  <div className="col-span-3 flex flex-col items-center justify-center">
+                    <div className="border-4 border-double border-red-700 px-3 py-1 text-center text-red-700">
+                      <div className="font-extrabold text-base tracking-wide leading-none">તીર્થ</div>
+                      <div className="text-[9px] font-bold mt-0.5 tracking-wider leading-none">ચુના પાર્સલ</div>
+                    </div>
+                    <div className="text-[8px] text-slate-500 font-bold mt-1 text-center">Mfg. of Lime Water</div>
                   </div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">
-                    {t("admin.licNo")}
+
+                  {/* Center Content */}
+                  <div className="col-span-6 text-center space-y-1">
+                    <img
+                      src={logoImg}
+                      alt="KHODIYAR GRUH UDHYOG"
+                      className="h-12 w-auto mx-auto object-contain"
+                    />
+                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                      Mfg. : Lime Water Parcel (Chuna Parcel)
+                    </p>
+                    <p className="text-[9px] text-slate-600 font-medium">
+                      Kachhiya Valo Kuvo, At. Badarkha, Ta. Dholka, Dist. Ahmedabad - 382270.
+                    </p>
+                    <p className="text-[9px] font-bold text-slate-900">
+                      GSTIN : <span className="text-red-700 font-extrabold">24BCYPP6507J1ZY</span>
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3 max-w-xs">
-                    {t("admin.addressLabel")}
-                  </p>
-                </div>
-                <div className="text-left sm:text-right text-xs text-muted-foreground space-y-1">
-                  <div className="font-bold text-foreground uppercase tracking-wider text-sm mb-1">{t("admin.wholesaleInvoice")}</div>
-                  <div><strong>{t("admin.invoiceNo")}</strong> INV-2026-{activeInvoice.id.replace("s_", "")}</div>
-                  <div><strong>{t("admin.dateLabel")}</strong> {activeInvoice.date}</div>
-                  <div><strong>{t("admin.statusLabel")}</strong> {activeInvoice.status === "Done" ? t("admin.paid") : t("admin.unpaid")}</div>
-                </div>
-              </div>
 
-              {/* Bill To */}
-              <div className="py-6 border-b border-border">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{t("admin.billTo")}</span>
-                <span className="text-base font-bold text-foreground block mt-1">{activeInvoice.company}</span>
-                <span className="text-xs text-muted-foreground block mt-0.5">B2B Wholesale Customer</span>
-              </div>
+                  {/* Right Badge: Riddhi Siddhi & Phone */}
+                  <div className="col-span-3 flex flex-col items-end justify-center">
+                    <div className="border-2 border-red-700 rounded-full px-3 py-0.5 text-center text-red-700">
+                      <div className="font-extrabold text-[11px] tracking-wide leading-none">રિદ્ધિ સિદ્ધિ</div>
+                      <div className="text-[8px] font-bold tracking-wider leading-none">ચુના અને ગોળ</div>
+                    </div>
+                    <div className="text-[9px] font-bold text-slate-900 mt-2 text-right">
+                      <div className="text-slate-800">Sanjay Patel</div>
+                      <div className="text-slate-600">99984 21346</div>
+                      <div className="text-slate-600">99743 07216</div>
+                    </div>
+                  </div>
 
-              {/* Items Table */}
-              <div className="py-6">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-border/85 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
-                      <th className="pb-3 w-8">#</th>
-                      <th className="pb-3">{t("admin.productDetails")}</th>
-                      <th className="pb-3 text-center">{t("admin.packSize")}</th>
-                      <th className="pb-3 text-right w-16">{t("admin.qty")}</th>
-                      <th className="pb-3 text-right w-24">{t("admin.rate")}</th>
-                      <th className="pb-3 text-right w-24">{t("admin.total")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {activeInvoice.items.map((item, index) => (
-                      <tr key={index} className="font-medium text-foreground">
-                        <td className="py-4">{index + 1}</td>
-                        <td className="py-4 text-sm font-semibold">{item.product}</td>
-                        <td className="py-4 text-center text-muted-foreground">{item.packSize}</td>
-                        <td className="py-4 text-right font-semibold">{item.quantity}</td>
-                        <td className="py-4 text-right text-muted-foreground">
-                          ₹{item.price.toLocaleString("en-IN")}
-                        </td>
-                        <td className="py-4 text-right font-bold text-foreground">
-                          ₹{item.total.toLocaleString("en-IN")}
-                        </td>
+                </div>
+
+                {/* Bill Type & PAN / Info Bar */}
+                <div className="grid grid-cols-3 border-b border-slate-950 text-center py-1 text-[9px] font-bold bg-slate-50">
+                  <div className="text-left pl-2">PAN : 26CORPP3939N1 (Exempt)</div>
+                  <div className="text-center font-black uppercase text-slate-900 tracking-wider">TAX INVOICE / BILL OF SUPPLY</div>
+                  <div className="text-right pr-2 uppercase">Original for Recipient</div>
+                </div>
+
+                {/* Customer & Invoice details Grid */}
+                <div className="grid grid-cols-2 border-b border-slate-950 text-[10px]">
+                  
+                  {/* Left: Customer Info */}
+                  <div className="border-r border-slate-950 p-2 space-y-1">
+                    <div className="font-bold text-slate-500 uppercase tracking-wider text-[8px]">Customer Details</div>
+                    <div><strong>M/S:</strong> <span className="text-sm font-bold text-slate-900">{activeInvoice.company}</span></div>
+                    <div><strong>Address:</strong> {customerInfo?.address || "Gujarat, India"}</div>
+                    <div><strong>Phone:</strong> +{customerInfo?.phone || activeInvoice.phone || "N/A"}</div>
+                    <div><strong>GSTIN:</strong> <span className="font-bold">{customerInfo?.gstin || "N/A"}</span></div>
+                    <div><strong>Place of Supply:</strong> {customerInfo?.address?.toLowerCase().includes("rajasthan") ? "Rajasthan ( 08 )" : "Gujarat ( 24 )"}</div>
+                  </div>
+
+                  {/* Right: Invoice Info */}
+                  <div className="p-2 space-y-1">
+                    <div className="font-bold text-slate-500 uppercase tracking-wider text-[8px]">Invoice Details</div>
+                    <div className="grid grid-cols-2 gap-x-2">
+                      <div><strong>Invoice No:</strong> KGU-2026-{activeInvoice.id.replace("s_", "")}</div>
+                      <div><strong>Invoice Date:</strong> {activeInvoice.date}</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2">
+                      <div><strong>Challan No:</strong> 10{activeInvoice.id.replace("s_", "")}</div>
+                      <div><strong>Challan Date:</strong> {activeInvoice.date}</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2">
+                      <div><strong>E-Way Bill No:</strong> 78456{activeInvoice.id.replace("s_", "")}</div>
+                      <div><strong>Transport:</strong> Silver Roadlines</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2">
+                      <div><strong>Transport ID:</strong> 24ABSFS0321B2ZL</div>
+                      <div><strong>Despatch Through:</strong> Road Transport</div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Table items */}
+                <div className="min-h-[200px]">
+                  <table className="w-full text-left text-[10px] border-collapse border-b border-slate-950">
+                    <thead>
+                      <tr className="border-b border-slate-950 font-bold bg-slate-50 text-slate-800 text-[9px] uppercase tracking-wider">
+                        <th className="border-r border-slate-950 p-2 text-center w-8">Sr.</th>
+                        <th className="border-r border-slate-950 p-2">Description of Goods</th>
+                        <th className="border-r border-slate-950 p-2 text-center w-20">Packing</th>
+                        <th className="border-r border-slate-950 p-2 text-right w-16">Qty</th>
+                        <th className="border-r border-slate-950 p-2 text-right w-20">Rate</th>
+                        <th className="border-r border-slate-950 p-2 text-right w-24">Taxable Value</th>
+                        <th className="border-r border-slate-950 p-2 text-center w-28">GST (CGST+SGST / IGST)</th>
+                        <th className="p-2 text-right w-24">Total Amount</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Calculations and Footer Block */}
-            <div className="border-t border-border pt-6">
-              <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-6">
-                {/* Note */}
-                <div className="text-xs text-muted-foreground max-w-xs space-y-1.5">
-                  <div className="font-bold text-foreground">{t("admin.billOfSupply")}:</div>
-                  <p className="leading-relaxed">
-                    This bill represents official dispatch records of Khodiyar Industry. Edible chuna products are manufactured under food safety license FSSAI requirements.
-                  </p>
+                    </thead>
+                    <tbody>
+                      {activeInvoice.items.map((item, idx) => {
+                        const isInterstate = customerInfo?.address?.toLowerCase().includes("rajasthan");
+                        const taxableVal = item.total; 
+                        
+                        return (
+                          <tr key={idx} className="border-b border-slate-950/20 font-medium">
+                            <td className="border-r border-slate-950 p-2 text-center">{idx + 1}</td>
+                            <td className="border-r border-slate-950 p-2 font-bold text-slate-900">{item.product}</td>
+                            <td className="border-r border-slate-950 p-2 text-center text-slate-600">{item.packSize === "12x1 pack" ? "12X1" : item.packSize === "24x1 pack" ? "24X1" : item.packSize}</td>
+                            <td className="border-r border-slate-950 p-2 text-right font-bold">{item.quantity} NOS</td>
+                            <td className="border-r border-slate-950 p-2 text-right text-slate-600">₹{item.price.toLocaleString("en-IN")}</td>
+                            <td className="border-r border-slate-950 p-2 text-right font-bold">₹{taxableVal.toLocaleString("en-IN")}</td>
+                            <td className="border-r border-slate-950 p-2 text-center text-slate-500">
+                              {isInterstate ? "IGST 0%" : "CGST 0% + SGST 0%"} (Exempt)
+                            </td>
+                            <td className="p-2 text-right font-extrabold text-slate-900">₹{item.total.toLocaleString("en-IN")}</td>
+                          </tr>
+                        );
+                      })}
+                      
+                      {/* Empty spacer rows to align to printed look */}
+                      {activeInvoice.items.length < 4 && 
+                        Array.from({ length: 4 - activeInvoice.items.length }).map((_, i) => (
+                          <tr key={`spacer-${i}`} className="h-6 opacity-30 border-b border-slate-950/10">
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td className="border-r border-slate-950">&nbsp;</td>
+                            <td>&nbsp;</td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </table>
                 </div>
 
-                {/* Subtotals */}
-                <div className="w-full sm:w-64 space-y-1.5 text-xs text-right">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>{t("admin.subtotalLabel")}:</span>
-                    <span>₹{Math.round(activeInvoice.revenue / 1.18).toLocaleString("en-IN")}</span>
+                {/* Table Total Summary Row */}
+                <div className="grid grid-cols-12 border-b border-slate-950 font-bold bg-slate-50 text-[10px]">
+                  <div className="col-span-3 border-r border-slate-950 p-2 text-right uppercase">Total</div>
+                  <div className="col-span-2 border-r border-slate-950 p-2 text-center">
+                    {activeInvoice.items.reduce((sum, item) => sum + item.quantity, 0)} NOS
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>CGST (9%):</span>
-                    <span>₹{Math.round((activeInvoice.revenue - Math.round(activeInvoice.revenue / 1.18)) / 2).toLocaleString("en-IN")}</span>
+                  <div className="col-span-2 border-r border-slate-950 p-2 text-right">&nbsp;</div>
+                  <div className="col-span-2 border-r border-slate-950 p-2 text-right">
+                    ₹{activeInvoice.revenue.toLocaleString("en-IN")}
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>SGST (9%):</span>
-                    <span>₹{Math.round((activeInvoice.revenue - Math.round(activeInvoice.revenue / 1.18)) / 2).toLocaleString("en-IN")}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border">
-                    <span>{t("admin.grandTotal")}:</span>
-                    <span>₹{activeInvoice.revenue.toLocaleString("en-IN")}</span>
+                  <div className="col-span-3 p-2 text-right text-slate-900 font-extrabold">
+                    ₹{activeInvoice.revenue.toLocaleString("en-IN")}
                   </div>
                 </div>
+
+                {/* Footer Calculations, Bank & Signatures Grid */}
+                <div className="grid grid-cols-12 text-[9px] border-b border-slate-950">
+                  
+                  {/* Left block (col-span-8): Total in Words, Bank Details, Terms */}
+                  <div className="col-span-8 border-r border-slate-950 p-2 space-y-3">
+                    
+                    {/* Total in words */}
+                    <div>
+                      <span className="font-bold text-slate-500 uppercase tracking-wider text-[8px] block">Total Amount in Words</span>
+                      <span className="font-extrabold text-slate-900 block text-[10px] mt-0.5">
+                        {numberToWords(activeInvoice.revenue)}
+                      </span>
+                    </div>
+
+                    {/* Bank Details & UPI QR Code side-by-side */}
+                    <div className="grid grid-cols-12 gap-3 border border-slate-300 p-2.5 rounded-xl bg-slate-50/50">
+                      
+                      {/* Bank Info */}
+                      <div className="col-span-8 space-y-1">
+                        <span className="font-bold text-slate-800 uppercase tracking-wider text-[8px] block">Bank Account Details</span>
+                        <div><strong>BANK NAME:</strong> STATE BANK OF INDIA</div>
+                        <div><strong>BRANCH:</strong> BADARKHA</div>
+                        <div><strong>A/C NO.:</strong> <span className="font-bold text-slate-900">36842624436</span></div>
+                        <div><strong>IFSC CODE:</strong> <span className="font-bold text-slate-900">SBIN0003805</span></div>
+                      </div>
+
+                      {/* UPI QR Code */}
+                      <div className="col-span-4 flex flex-col items-center justify-center text-center border-l border-slate-200 pl-2">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(`upi://pay?pa=36842624436@sbi&pn=Khodiyar%20Gruh%20Udhyog&am=${activeInvoice.revenue}&cu=INR`)}`} 
+                          alt="UPI Payment QR Code" 
+                          className="h-14 w-14 object-contain border border-slate-200 p-0.5 bg-white"
+                        />
+                        <span className="text-[7px] font-black text-slate-600 mt-1 uppercase leading-none">Pay using UPI</span>
+                      </div>
+
+                    </div>
+
+                    {/* Terms & Conditions */}
+                    <div className="space-y-1">
+                      <span className="font-bold text-slate-500 uppercase tracking-wider text-[8px] block">Terms & Conditions</span>
+                      <ul className="list-decimal list-inside space-y-0.5 text-slate-600 leading-tight">
+                        <li>Goods once sold will not be taken back.</li>
+                        <li>Interest @ 18% p.a. will be charge if payment is not made within due date.</li>
+                        <li>Our risk and responsibility ceases as soon as the goods leave our premises.</li>
+                        <li>Subject to Dholka Jurisdiction. E. & O. E.</li>
+                      </ul>
+                    </div>
+
+                    {/* Customer Signature */}
+                    <div className="pt-2 flex justify-between items-end">
+                      <div>
+                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Customer's Signature</div>
+                        <div className="h-6 w-36 border-b border-slate-400 mt-2" />
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Right block (col-span-4): Calculation Breakdown, Signatory */}
+                  <div className="col-span-4 flex flex-col justify-between p-2">
+                    
+                    {/* Calculation Box */}
+                    <div className="space-y-1.5 text-right border-b border-slate-200 pb-3">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Taxable Value:</span>
+                        <span className="font-bold">₹{activeInvoice.revenue.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">CGST (0%):</span>
+                        <span className="font-bold">₹0.00</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">SGST (0%):</span>
+                        <span className="font-bold">₹0.00</span>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-200 pt-1 font-extrabold text-[11px] text-slate-900">
+                        <span>Total Amount:</span>
+                        <span>₹{activeInvoice.revenue.toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+
+                    {/* Declaration & Signatory */}
+                    <div className="space-y-2 text-center pt-2">
+                      <p className="text-[7px] text-slate-500 leading-none">
+                        Certified that the particulars given above are true and correct.
+                      </p>
+                      <div className="text-center font-bold text-[9px] text-slate-900 mt-1">
+                        For, Khodiyar Gruh Udhyog
+                      </div>
+                      <div className="h-8 flex items-center justify-center select-none opacity-40 italic text-[7px] border border-dashed border-slate-300 rounded text-slate-500 mx-2 bg-slate-50">
+                        Computer Generated Bill - No Sign. Required
+                      </div>
+                      <div className="text-[8px] font-extrabold text-slate-800 uppercase tracking-wider">
+                        Authorised Signatory
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Thank You greeting */}
+                <div className="text-center text-[10px] font-bold py-2 text-slate-700 bg-slate-50 tracking-wider">
+                  Thank you for shopping with us!
+                </div>
+
               </div>
 
               {/* Bottom Print / Close Controls */}
-              <div className="mt-8 pt-6 border-t border-border flex justify-end gap-3 print:hidden">
+              <div className="mt-4 flex justify-end gap-3 print:hidden">
                 <Button
                   onClick={() => setActiveInvoice(null)}
                   variant="outline"
-                  className="font-medium"
+                  className="font-medium animate-fade-in"
                 >
                   {t("admin.close")}
                 </Button>
                 <Button
-                  onClick={() => window.print()}
-                  className="bg-emerald-700 text-white hover:bg-emerald-800 font-semibold"
+                  type="button"
+                  onClick={handlePrint}
+                  className="bg-emerald-700 text-white hover:bg-emerald-800 font-semibold shadow-md flex items-center gap-1.5 cursor-pointer hover:scale-102 active:scale-98 transition-all"
                 >
-                  <Printer className="mr-2 h-4 w-4" /> {t("admin.printInvoice")}
+                  <Printer className="h-4 w-4" /> {t("admin.printInvoice")}
                 </Button>
               </div>
 
-              {/* Signature block for printed version */}
-              <div className="hidden print:flex justify-between items-end mt-16 text-xs text-muted-foreground">
-                <div>
-                  <p>Customer Signature</p>
-                  <div className="h-10 w-44 border-b border-muted-foreground mt-4" />
-                </div>
-                <div className="text-right">
-                  <p>For, Khodiyar Industry</p>
-                  <div className="h-10 w-44 border-b border-muted-foreground mt-4" />
-                  <p className="mt-2 text-[10px]">{t("admin.authorizedSignatory")}</p>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* DELETE PRODUCT CONFIRMATION MODAL */}
       {deleteProductConfirm && (

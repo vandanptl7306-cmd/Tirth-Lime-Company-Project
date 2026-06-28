@@ -12,13 +12,13 @@ import gsap from "gsap";
 export const Route = createFileRoute("/products")({
   head: () => ({
     meta: [
-      { title: "Edible Chuna Products — Khodiyar Industry" },
+      { title: "Edible Chuna Products — KHODIYAR GRUH UDHYOG" },
       {
         name: "description",
         content:
           "Browse the Tirth and Riddhi Siddhi edible chuna range — white and yellow variants in Medium, Ghata, Packing and Loose formats.",
       },
-      { property: "og:title", content: "Edible Chuna Catalog — Khodiyar Industry" },
+      { property: "og:title", content: "Edible Chuna Catalog — KHODIYAR GRUH UDHYOG" },
       {
         property: "og:description",
         content:

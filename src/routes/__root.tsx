@@ -79,15 +79,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       {
-        title: "Khodiyar Industry — FSSAI-Certified Edible Chuna Manufacturer",
+        title: "KHODIYAR GRUH UDHYOG — FSSAI-Certified Edible Chuna Manufacturer",
       },
       {
         name: "description",
         content:
           "Wholesale supplier of premium edible chuna (lime water) for distributors, retailers and paan-shop vendors. FSSAI certified, hygienically manufactured.",
       },
-      { name: "author", content: "Khodiyar Industry" },
-      { property: "og:title", content: "Khodiyar Industry — Edible Chuna Wholesale" },
+      { name: "author", content: "KHODIYAR GRUH UDHYOG" },
+      { property: "og:title", content: "KHODIYAR GRUH UDHYOG — Edible Chuna Wholesale" },
       {
         property: "og:description",
         content:

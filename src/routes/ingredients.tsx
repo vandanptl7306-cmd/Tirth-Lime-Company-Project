@@ -5,7 +5,7 @@ import { IngredientsSection } from "@/components/site/IngredientsSection";
 export const Route = createFileRoute("/ingredients")({
   head: () => ({
     meta: [
-      { title: "Ingredients & Purity — Khodiyar Industry" },
+      { title: "Ingredients & Purity — KHODIYAR GRUH UDHYOG" },
       {
         name: "description",
         content: "Discover the pure, natural raw materials used in our edible chuna manufacturing. From premium limestone to multi-stage filtered water.",

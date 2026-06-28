@@ -15,11 +15,11 @@ export function ProductCard({ product }: { product: Product }) {
   const productVariant = t(`products.${transKey}.variant`);
   const productTag = t(`products.${transKey}.tag`);
 
-  let waMsg = `Hello Khodiyar Industry, I'd like to inquire about "${productName} ${productVariant}". Please share bulk pricing.`;
+  let waMsg = `Hello KHODIYAR GRUH UDHYOG, I'd like to inquire about "${productName} ${productVariant}". Please share bulk pricing.`;
   if (language === "gu") {
-    waMsg = `નમસ્તે ખોડિયાર ઇન્ડસ્ટ્રી, હું "${productName} ${productVariant}" માટે પૂછપરછ કરવા માંગુ છું. કૃપા કરીને જથ્થાબંધ ભાવ શેર કરશો.`;
+    waMsg = `નમસ્તે ખોડિયાર ગૃહ ઉદ્યોગ, હું "${productName} ${productVariant}" માટે પૂછપરછ કરવા માંગુ છું. કૃપા કરીને જથ્થાબંધ ભાવ શેર કરશો.`;
   } else if (language === "hi") {
-    waMsg = `नमस्ते खोदियार इंडस्ट्री, मैं "${productName} ${productVariant}" के लिए पूछताछ करना चाहता हूँ। कृपया थोक भाव साझा करें।`;
+    waMsg = `नमस्ते खोदियार गृह उद्योग, मैं "${productName} ${productVariant}" के लिए पूछताछ करना चाहता हूँ। कृपया थोक भाव साझा करें।`;
   }
 
   const href = buildWaLink(waMsg);

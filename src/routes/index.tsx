@@ -34,13 +34,13 @@ gsap.registerPlugin(ScrollTrigger);
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Khodiyar Industry — Premium Edible Chuna for Your Business" },
+      { title: "KHODIYAR GRUH UDHYOG — Premium Edible Chuna for Your Business" },
       {
         name: "description",
         content:
           "FSSAI-certified manufacturer of edible chuna (lime water). Tirth and Riddhi Siddhi product range for wholesalers, distributors and paan-shop vendors.",
       },
-      { property: "og:title", content: "Khodiyar Industry — Edible Chuna Wholesale" },
+      { property: "og:title", content: "KHODIYAR GRUH UDHYOG — Edible Chuna Wholesale" },
       {
         property: "og:description",
         content:
@@ -83,11 +83,11 @@ function Home() {
     };
   }, []);
 
-  let waInquireMsg = "Hello Khodiyar Industry, I'd like to inquire about your edible chuna range.";
+  let waInquireMsg = "Hello KHODIYAR GRUH UDHYOG, I'd like to inquire about your edible chuna range.";
   if (language === "gu") {
-    waInquireMsg = "નમસ્તે ખોડિયાર ઇન્ડસ્ટ્રી, હું તમારા ખાવાલાયક ચૂનાની પ્રોડક્ટ શ્રેણી માટે પૂછપરછ કરવા માંગુ છું.";
+    waInquireMsg = "નમસ્તે ખોડિયાર ગૃહ ઉદ્યોગ, હું તમારા ખાવાલાયક ચૂનાની પ્રોડક્ટ શ્રેણી માટે પૂછપરછ કરવા માંગુ છું.";
   } else if (language === "hi") {
-    waInquireMsg = "नमस्ते खोदियार इंडस्ट्री, मैं आपकी खाने योग्य चूना उत्पाद श्रृंखला के बारे में पूछताछ करना चाहता हूँ।";
+    waInquireMsg = "नमस्ते खोदियार गृह उद्योग, मैं आपकी खाने योग्य चूना उत्पाद श्रृंखला के बारे में पूछताछ करना चाहता हूँ।";
   }
 
   const heroWa = buildWaLink(waInquireMsg);
@@ -739,7 +739,7 @@ function Home() {
           <div className="overflow-hidden rounded-3xl border border-primary-foreground/10 shadow-2xl">
             <img
               src={factoryImg}
-              alt="Khodiyar Industry manufacturing facility"
+              alt="KHODIYAR GRUH UDHYOG manufacturing facility"
               loading="lazy"
               width={1024}
               height={1024}

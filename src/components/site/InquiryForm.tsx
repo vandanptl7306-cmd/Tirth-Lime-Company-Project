@@ -41,9 +41,6 @@ export function InquiryForm() {
       .string()
       .min(7, t("form.validation.phoneMin"))
       .regex(/^[0-9+\-\s()]+$/, t("form.validation.phoneRegex")),
-    product: z.string().min(1, t("form.validation.product")),
-    packSize: z.string().min(1, t("form.validation.packSize")),
-    quantity: z.string().min(1, t("form.validation.quantity")),
     address: z.string().min(5, t("form.validation.address")),
     message: z.string().optional(),
   }), [language, t]);
@@ -56,9 +53,6 @@ export function InquiryForm() {
       name: "",
       company: "",
       phone: "",
-      product: "",
-      packSize: "",
-      quantity: "",
       address: "",
       message: "",
     },
@@ -72,30 +66,70 @@ export function InquiryForm() {
   }, [language, form]);
 
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success">("idle");
+  
+  const [inquiryItems, setInquiryItems] = useState<{
+    product: string;
+    packSize: string;
+    quantity: string;
+  }[]>([
+    { product: "", packSize: "12x1 pack", quantity: "" }
+  ]);
+
+  const handleAddItemRow = () => {
+    setInquiryItems([...inquiryItems, { product: "", packSize: "12x1 pack", quantity: "" }]);
+  };
+
+  const handleRemoveItemRow = (index: number) => {
+    const updated = inquiryItems.filter((_, idx) => idx !== index);
+    setInquiryItems(updated);
+  };
+
+  const handleItemChange = (index: number, field: "product" | "packSize" | "quantity", value: string) => {
+    const updated = inquiryItems.map((item, idx) => {
+      if (idx === index) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setInquiryItems(updated);
+  };
 
   function onSubmit(values: FormValues) {
+    const hasInvalidItem = inquiryItems.some(item => !item.product || !item.packSize || !item.quantity);
+    if (hasInvalidItem) {
+      toast.error(language === "gu" ? "કૃપા કરીને બધા ઉત્પાદનોની વિગતો ભરો." : 
+                  language === "hi" ? "कृपया सभी उत्पादों का विवरण भरें।" :
+                  "Please fill out product details for all rows.");
+      return;
+    }
+
     setSubmitStatus("loading");
 
-    const header = language === "gu" ? "*નવી જથ્થાબંધ પૂછપરછ — ખોડિયાર ઇન્ડસ્ટ્રી*" : 
-                   language === "hi" ? "*नई थोक पूछताछ — खोदियार इंडस्ट्री*" :
-                   "*New Bulk Inquiry — Khodiyar Industry*";
+    const header = language === "gu" ? "*નવી જથ્થાબંધ પૂછપરછ — ખોડિયાર ગૃહ ઉદ્યોગ*" : 
+                   language === "hi" ? "*नई थोक पूछताछ — खोदियार गृह उद्योग*" :
+                   "*New Bulk Inquiry — KHODIYAR GRUH UDHYOG*";
+
+    const itemsText = inquiryItems.map((item, index) => {
+      return `  ${index + 1}. ${item.product} — ${item.packSize} [Qty: ${item.quantity}]`;
+    }).join("\n");
 
     const lines = [
       header,
       `${t("form.labels.name")}: ${values.name}`,
       `${t("form.labels.company")}: ${values.company}`,
       `${t("form.labels.phone")}: ${values.phone}`,
-      `${t("form.labels.product")}: ${values.product}`,
-      `${t("form.labels.packSize")}: ${values.packSize}`,
-      `${t("form.labels.quantity")}: ${values.quantity}`,
       `${t("form.labels.address")}: ${values.address}`,
+      "",
+      language === "gu" ? "*જરૂરી ઉત્પાદનો:*" : language === "hi" ? "*आवश्यक उत्पाद:*" : "*Products Inquired:*",
+      itemsText,
     ];
     if (values.message?.trim()) {
+      lines.push("");
       lines.push(`${t("form.labels.message")}: ${values.message.trim()}`);
     }
     const url = buildWaLink(lines.join("\n"));
 
-    // Artificial compiler/compiling animation delay for B2B portal feedback
+    // Artificial compiler delay for B2B portal feedback
     setTimeout(() => {
       setSubmitStatus("success");
       
@@ -103,6 +137,7 @@ export function InquiryForm() {
         window.open(url, "_blank", "noopener,noreferrer");
         toast.success(t("form.toast"));
         form.reset();
+        setInquiryItems([{ product: "", packSize: "12x1 pack", quantity: "" }]);
         
         setTimeout(() => {
           setSubmitStatus("idle");
@@ -158,7 +193,7 @@ export function InquiryForm() {
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="sm:col-span-2">
                 <FormLabel>{t("form.labels.phone")}</FormLabel>
                 <FormControl>
                   <div className="input-wrapper relative">
@@ -172,78 +207,106 @@ export function InquiryForm() {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("form.labels.quantity")}</FormLabel>
-                <FormControl>
-                  <div className="input-wrapper relative">
-                    <Input placeholder={t("form.placeholders.quantity")} className="focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" {...field} />
-                    <svg className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none" viewBox="0 0 100 2" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M 50 1 L 0 1 M 50 1 L 100 1" fill="none" stroke="var(--brand-gold)" strokeWidth="2" className="input-focus-line" />
-                    </svg>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="product"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("form.labels.product")}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("form.placeholders.product")} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
+        {/* INQUIRY PRODUCTS BUILDER */}
+        <div className="border-t border-border/80 pt-5 space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-brand-gold">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              {language === "gu" ? "પૂછપરછ માટે ઉત્પાદનો" : language === "hi" ? "पूछताछ के लिए उत्पाद" : "Products for Inquiry"}
+            </span>
+            <Button
+              type="button"
+              onClick={handleAddItemRow}
+              size="sm"
+              className="bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20 hover:text-brand-blue text-xs font-semibold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5 mr-1">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              {language === "gu" ? "ઉત્પાદન ઉમેરો" : language === "hi" ? "उत्पाद जोड़ें" : "Add Product"}
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {inquiryItems.map((item, idx) => (
+              <div key={idx} className="flex flex-col sm:flex-row gap-3 border border-border/60 bg-secondary/10 p-3.5 rounded-2xl items-end relative animate-fade-in animate-duration-200">
+                
+                {/* Product Selector */}
+                <div className="flex-1 grid gap-1.5 w-full">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("form.labels.product")}
+                  </label>
+                  <select
+                    required
+                    value={item.product}
+                    onChange={(e) => handleItemChange(idx, "product", e.target.value)}
+                    className="h-10 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold bg-background w-full"
+                  >
+                    <option value="" disabled>{t("form.placeholders.product")}</option>
                     {products.map((p) => {
                       const transKey = p.id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
                       const pName = t(`products.${transKey}.name`);
                       const pVar = t(`products.${transKey}.variant`);
                       return (
-                        <SelectItem key={p.id} value={`${pName} ${pVar}`}>
+                        <option key={p.id} value={`${pName} (${pVar})`}>
                           {pName} — {pVar}
-                        </SelectItem>
+                        </option>
                       );
                     })}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </select>
+                </div>
 
-          <FormField
-            control={form.control}
-            name="packSize"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("form.labels.packSize")}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("form.placeholders.packSize")} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="12x1 pack">{t("form.packSizes.pack12")}</SelectItem>
-                    <SelectItem value="24x1 pack">{t("form.packSizes.pack24")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                {/* Pack Size Selector */}
+                <div className="grid gap-1.5 w-full sm:w-36">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("form.labels.packSize")}
+                  </label>
+                  <select
+                    value={item.packSize}
+                    onChange={(e) => handleItemChange(idx, "packSize", e.target.value)}
+                    className="h-10 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold bg-background w-full"
+                  >
+                    <option value="12x1 pack">12X1 Pack</option>
+                    <option value="24x1 pack">24X1 Pack</option>
+                  </select>
+                </div>
+
+                {/* Quantity Input */}
+                <div className="grid gap-1.5 w-full sm:w-28">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("form.labels.quantity")}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 50"
+                    value={item.quantity}
+                    onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                    className="h-10 rounded-lg border border-border px-3 text-xs focus:outline-none focus:border-brand-gold bg-background w-full"
+                  />
+                </div>
+
+                {/* Delete button */}
+                {inquiryItems.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItemRow(idx)}
+                    className="h-10 w-10 border border-destructive/20 text-destructive hover:bg-destructive/10 rounded-lg flex items-center justify-center shrink-0 self-end"
+                    title={t("admin.delete")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                )}
+
+              </div>
+            ))}
+          </div>
         </div>
 
         <FormField

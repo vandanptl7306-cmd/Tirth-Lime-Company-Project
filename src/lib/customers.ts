@@ -4,6 +4,7 @@ export type Customer = {
   company: string;   // Agency / Company Name
   phone: string;     // WhatsApp Number
   address?: string;  // Delivery Address
+  gstin?: string;    // GSTIN Number
   dateAdded: string; // ISO date YYYY-MM-DD
 };
 
@@ -25,7 +26,8 @@ export function getStoredCustomers(): Customer[] {
       name: "Rameshbhai Patel",
       company: "Janta Paan Bhandar",
       phone: "919998421346",
-      address: "G-12, Sector-11, Gandhinagar",
+      address: "G-12, Sector-11, Gandhinagar, Gujarat",
+      gstin: "24BCYPP1234A1Z1",
       dateAdded: "2026-04-10"
     },
     {
@@ -33,7 +35,8 @@ export function getStoredCustomers(): Customer[] {
       name: "Sureshchandra Shah",
       company: "Maruti Traders",
       phone: "919998421346",
-      address: "Shop No. 4, APMC Market, Rajkot",
+      address: "Shop No. 4, APMC Market, Rajkot, Gujarat",
+      gstin: "24BCYPP5678B2Z2",
       dateAdded: "2026-04-18"
     },
     {
@@ -41,7 +44,8 @@ export function getStoredCustomers(): Customer[] {
       name: "Kalyanji Gala",
       company: "Kalyan Paan Shop",
       phone: "919998421346",
-      address: "Near Station Road, Bhuj",
+      address: "Near Station Road, Bhuj, Gujarat",
+      gstin: "24BCYPP9012C3Z3",
       dateAdded: "2026-05-02"
     },
     {
@@ -49,7 +53,8 @@ export function getStoredCustomers(): Customer[] {
       name: "Maheshbhai Prajapati",
       company: "Gujarat Lime Distributors",
       phone: "919998421346",
-      address: "Lime Compound, Kalol, Gandhinagar",
+      address: "Lime Compound, Kalol, Gandhinagar, Gujarat",
+      gstin: "24BCYPP3456D4Z4",
       dateAdded: "2026-05-15"
     },
     {
@@ -58,6 +63,7 @@ export function getStoredCustomers(): Customer[] {
       company: "Rajasthan Paan Center",
       phone: "919998421346",
       address: "Johari Bazaar, Jaipur, Rajasthan",
+      gstin: "08BCYPP7890E5Z5",
       dateAdded: "2026-05-28"
     }
   ];

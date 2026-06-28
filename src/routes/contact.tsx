@@ -11,13 +11,13 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact & Bulk Inquiries — Khodiyar Industry" },
+      { title: "Contact & Bulk Inquiries — KHODIYAR GRUH UDHYOG" },
       {
         name: "description",
         content:
-          "Get a wholesale quote for edible chuna. Reach Khodiyar Industry by WhatsApp, phone or email.",
+          "Get a wholesale quote for edible chuna. Reach KHODIYAR GRUH UDHYOG by WhatsApp, phone or email.",
       },
-      { property: "og:title", content: "Contact Khodiyar Industry" },
+      { property: "og:title", content: "Contact KHODIYAR GRUH UDHYOG" },
       {
         property: "og:description",
         content:
@@ -31,11 +31,11 @@ export const Route = createFileRoute("/contact")({
 function ContactPage() {
   const { t, language } = useLanguage();
 
-  let waDiscussMsg = "Hello Khodiyar Industry, I'd like to discuss a bulk order.";
+  let waDiscussMsg = "Hello KHODIYAR GRUH UDHYOG, I'd like to discuss a bulk order.";
   if (language === "gu") {
-    waDiscussMsg = "નમસ્તે ખોડિયાર ઇન્ડસ્ટ્રી, હું જથ્થાબંધ ઓર્ડર વિશે ચર્ચા કરવા માંગુ છું.";
+    waDiscussMsg = "નમસ્તે ખોડિયાર ગૃહ ઉદ્યોગ, હું જથ્થાબંધ ઓર્ડર વિશે ચર્ચા કરવા માંગુ છું.";
   } else if (language === "hi") {
-    waDiscussMsg = "नमस्ते खोदियार इंडस्ट्री, मैं थोक ऑर्डर के बारे में चर्चा करना चाहता हूँ।";
+    waDiscussMsg = "नमस्ते खोदियार गृह उद्योग, मैं थोक ऑर्डर के बारे में चर्चा करना चाहता हूँ।";
   }
 
   const wa = buildWaLink(waDiscussMsg);

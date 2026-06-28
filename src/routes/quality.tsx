@@ -20,13 +20,13 @@ gsap.registerPlugin(ScrollTrigger);
 export const Route = createFileRoute("/quality")({
   head: () => ({
     meta: [
-      { title: "Quality & Hygiene — Khodiyar Industry" },
+      { title: "Quality & Hygiene — KHODIYAR GRUH UDHYOG" },
       {
         name: "description",
         content:
           "FSSAI-certified edible chuna manufacturing with strict hygiene controls, premium raw materials and quality testing at every batch.",
       },
-      { property: "og:title", content: "Quality & Hygiene — Khodiyar Industry" },
+      { property: "og:title", content: "Quality & Hygiene — KHODIYAR GRUH UDHYOG" },
       {
         property: "og:description",
         content:

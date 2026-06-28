@@ -22,6 +22,8 @@ export function SiteLayout({ children, className = "bg-background" }: { children
       touchMultiplier: 1.5,
     });
 
+    (window as any).lenis = lenis;
+
     // Update ScrollTrigger on scroll
     lenis.on("scroll", ScrollTrigger.update);
 
@@ -35,6 +37,7 @@ export function SiteLayout({ children, className = "bg-background" }: { children
     return () => {
       gsap.ticker.remove(updateTicker);
       lenis.destroy();
+      delete (window as any).lenis;
     };
   }, []);
 

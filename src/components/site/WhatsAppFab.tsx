@@ -3,7 +3,7 @@ import { buildWaLink } from "@/lib/products";
 
 export function WhatsAppFab() {
   const href = buildWaLink(
-    "Hello Khodiyar Industry, I'd like to inquire about your edible chuna products.",
+    "Hello KHODIYAR GRUH UDHYOG, I'd like to inquire about your edible chuna products.",
   );
   return (
     <a
