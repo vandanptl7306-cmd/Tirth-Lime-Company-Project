@@ -369,6 +369,8 @@ function AdminDashboard() {
   const [prodTag, setProdTag] = useState("");
   const [prodMinQty, setProdMinQty] = useState("");
   const [prodImage, setProdImage] = useState("");
+  const [prodImages, setProdImages] = useState<string[]>([]);
+  const [prodVideos, setProdVideos] = useState<string[]>([]);
 
   const [mounted, setMounted] = useState(false);
   const [filterStatus, setFilterStatus] = useState<"All" | "Done" | "Pending">("All");
@@ -580,6 +582,8 @@ function AdminDashboard() {
     setProdTag("");
     setProdMinQty("");
     setProdImage("");
+    setProdImages([]);
+    setProdVideos([]);
   };
 
   const handleAddOrEditProduct = (e: React.FormEvent) => {
@@ -589,12 +593,16 @@ function AdminDashboard() {
       return;
     }
 
+    const primaryImage = prodImage || (prodColor === "yellow" ? PRODUCTS[2].image : PRODUCTS[0].image);
+
     const updatedProduct: Product = {
       id: editingProduct ? editingProduct.id : "prod_" + Date.now(),
       name: prodName,
       variant: prodVariant,
       color: prodColor,
-      image: prodImage || (prodColor === "yellow" ? PRODUCTS[2].image : PRODUCTS[0].image),
+      image: primaryImage,
+      images: prodImages.length > 0 ? prodImages : [primaryImage],
+      videos: prodVideos,
       tag: prodTag || "Edible chuna product",
       minQuantity: prodMinQty ? Number(prodMinQty) : undefined,
     };
@@ -622,6 +630,8 @@ function AdminDashboard() {
     setProdTag(product.tag);
     setProdMinQty(product.minQuantity ? String(product.minQuantity) : "");
     setProdImage(product.image);
+    setProdImages(product.images || [product.image]);
+    setProdVideos(product.videos || []);
     setShowAddProductModal(true);
   };
 
@@ -2446,39 +2456,128 @@ function AdminDashboard() {
                   />
                 </div>
 
-                {/* PHOTO UPLOAD */}
-                <div className="grid gap-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    {t("admin.productImage")}
+                {/* PRODUCT GALLERY (MULTIPLE IMAGES) */}
+                <div className="grid gap-2 border border-border/80 bg-secondary/10 p-4 rounded-2xl">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-brand-blue">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                    Product Photos Gallery ({prodImages.length})
                   </label>
-                  <div className="flex gap-4 items-center">
-                    <div className="h-20 w-20 rounded-2xl border border-border overflow-hidden bg-secondary shrink-0 relative flex items-center justify-center">
-                      {prodImage ? (
-                        <img src={prodImage} alt="Preview" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground font-bold text-center">No Photo</span>
-                      )}
+                  
+                  {/* Thumbnails grid */}
+                  {prodImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2.5 mb-2.5">
+                      {prodImages.map((img, idx) => (
+                        <div key={idx} className="h-16 w-16 rounded-xl border border-border overflow-hidden bg-secondary relative group select-none">
+                          <img src={img} alt={`Preview ${idx + 1}`} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = prodImages.filter((_, i) => i !== idx);
+                              setProdImages(updated);
+                              if (idx === 0) {
+                                setProdImage(updated[0] || "");
+                              }
+                            }}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          {idx === 0 && (
+                            <span className="absolute bottom-0 inset-x-0 bg-brand-blue text-[8px] text-white font-bold text-center py-0.5 leading-none">
+                              Cover
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex-1 grid gap-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setProdImage(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary-foreground/10 file:cursor-pointer"
-                      />
-                      <p className="text-[10px] text-muted-foreground">
-                        Upload custom photo (automatically saved locally) or leave blank for color fallback.
-                      </p>
+                  )}
+
+                  {/* Image Upload Input */}
+                  <div className="grid gap-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        files.forEach((file) => {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setProdImages((prev) => {
+                              const result = [...prev, reader.result as string];
+                              if (prev.length === 0) {
+                                setProdImage(reader.result as string);
+                              }
+                              return result;
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                      className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary-foreground/10 file:cursor-pointer"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Upload one or more photos. The first photo is selected as the primary cover photo.
+                    </p>
+                  </div>
+                </div>
+
+                {/* PRODUCT VIDEOS */}
+                <div className="grid gap-2 border border-border/80 bg-secondary/10 p-4 rounded-2xl">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-brand-blue">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 12-6.75-3.75v7.5L15.75 12z" />
+                    </svg>
+                    Product Videos ({prodVideos.length})
+                  </label>
+
+                  {/* Video Previews */}
+                  {prodVideos.length > 0 && (
+                    <div className="flex flex-wrap gap-2.5 mb-2.5">
+                      {prodVideos.map((vid, idx) => (
+                        <div key={idx} className="h-16 w-16 rounded-xl border border-border overflow-hidden bg-secondary relative group flex items-center justify-center select-none">
+                          <video src={vid} className="h-full w-full object-cover" muted playsInline />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                              <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.324-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setProdVideos(prodVideos.filter((_, i) => i !== idx))}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                  )}
+
+                  {/* Video Upload Input */}
+                  <div className="grid gap-1">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        files.forEach((file) => {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setProdVideos((prev) => [...prev, reader.result as string]);
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                      className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary-foreground/10 file:cursor-pointer"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Upload wholesale presentation or usage demo videos (MP4, WebM formats).
+                    </p>
                   </div>
                 </div>
 

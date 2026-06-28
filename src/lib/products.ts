@@ -7,6 +7,8 @@ export type Product = {
   variant: string;
   color: "white" | "yellow" | string;
   image: string;
+  images?: string[];
+  videos?: string[];
   tag: string;
   minQuantity?: number;
 };
@@ -18,6 +20,7 @@ export const PRODUCTS: Product[] = [
     variant: "White — Medium",
     color: "white",
     image: chunaWhite,
+    images: [chunaWhite],
     tag: "Premium white chuna in medium parcel size",
   },
   {
@@ -26,6 +29,7 @@ export const PRODUCTS: Product[] = [
     variant: "White — Ghata",
     color: "white",
     image: chunaWhite,
+    images: [chunaWhite],
     tag: "Traditional ghata pack of white chuna",
   },
   {
@@ -34,6 +38,7 @@ export const PRODUCTS: Product[] = [
     variant: "Yellow — Medium",
     color: "yellow",
     image: chunaYellow,
+    images: [chunaYellow],
     tag: "Rich yellow chuna in medium parcel size",
   },
   {
@@ -42,6 +47,7 @@ export const PRODUCTS: Product[] = [
     variant: "Yellow — Ghata",
     color: "yellow",
     image: chunaYellow,
+    images: [chunaYellow],
     tag: "Traditional ghata pack of yellow chuna",
   },
   {
@@ -50,6 +56,7 @@ export const PRODUCTS: Product[] = [
     variant: "Yellow — Packing",
     color: "yellow",
     image: chunaYellow,
+    images: [chunaYellow],
     tag: "Retail-ready packed yellow chuna",
   },
   {
@@ -58,6 +65,7 @@ export const PRODUCTS: Product[] = [
     variant: "Yellow — Loose",
     color: "yellow",
     image: chunaYellow,
+    images: [chunaYellow],
     tag: "Loose yellow chuna for bulk repacking",
   },
 ];

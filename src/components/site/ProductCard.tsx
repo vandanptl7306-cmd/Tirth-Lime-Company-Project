@@ -1,19 +1,45 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildWaLink, type Product } from "@/lib/products";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import gsap from "gsap";
 
 export function ProductCard({ product }: { product: Product }) {
   const { t, language } = useLanguage();
   const cardRef = useRef<HTMLDivElement>(null);
-  
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const transKey = product.id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
   
   const productName = t(`products.${transKey}.name`);
   const productVariant = t(`products.${transKey}.variant`);
   const productTag = t(`products.${transKey}.tag`);
+
+  const mediaItems = useMemo(() => {
+    const items: { type: "image" | "video"; url: string }[] = [];
+    if (product.images && product.images.length > 0) {
+      product.images.forEach((img) => items.push({ type: "image", url: img }));
+    } else if (product.image) {
+      items.push({ type: "image", url: product.image });
+    }
+    if (product.videos && product.videos.length > 0) {
+      product.videos.forEach((vid) => items.push({ type: "video", url: vid }));
+    }
+    return items;
+  }, [product]);
+
+  const handleNextMedia = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev + 1) % mediaItems.length);
+  };
+
+  const handlePrevMedia = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
+  };
 
   let waMsg = `Hello KHODIYAR GRUH UDHYOG, I'd like to inquire about "${productName} ${productVariant}". Please share bulk pricing.`;
   if (language === "gu") {
@@ -40,9 +66,9 @@ export function ProductCard({ product }: { product: Product }) {
 
     const xTo = gsap.quickTo(card, "rotateY", { duration: 0.4, ease: "power2.out" });
     const yTo = gsap.quickTo(card, "rotateX", { duration: 0.4, ease: "power2.out" });
-    const imgXTo = gsap.quickTo(card.querySelector(".product-image"), "x", { duration: 0.4, ease: "power2.out" });
-    const imgYTo = gsap.quickTo(card.querySelector(".product-image"), "y", { duration: 0.4, ease: "power2.out" });
-    const scaleTo = gsap.quickTo(card.querySelector(".product-image"), "scale", { duration: 0.4, ease: "power2.out" });
+    const imgXTo = gsap.quickTo(card.querySelector(".product-image-container"), "x", { duration: 0.4, ease: "power2.out" });
+    const imgYTo = gsap.quickTo(card.querySelector(".product-image-container"), "y", { duration: 0.4, ease: "power2.out" });
+    const scaleTo = gsap.quickTo(card.querySelector(".product-image-container"), "scale", { duration: 0.4, ease: "power2.out" });
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = card.getBoundingClientRect();
@@ -56,10 +82,10 @@ export function ProductCard({ product }: { product: Product }) {
       yTo(rotateX);
       xTo(rotateY);
 
-      // Subtle parallax effect on product image inside
+      // Subtle parallax effect on product image container inside
       imgXTo(-x * 0.04);
       imgYTo(-y * 0.04);
-      scaleTo(1.05);
+      scaleTo(1.03);
 
       // Subtle lift + hover shadow + border glow
       gsap.to(card, {
@@ -124,22 +150,95 @@ export function ProductCard({ product }: { product: Product }) {
       ref={cardRef}
       className="product-card-reveal opacity-0 group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
-      <div className="relative aspect-square overflow-hidden bg-secondary">
-        <img
-          src={product.image}
-          alt={`${productName} ${productVariant}`}
-          loading="lazy"
-          width={1024}
-          height={1024}
-          className="product-image h-full w-full object-cover"
-        />
+      <div className="relative aspect-square overflow-hidden bg-secondary select-none">
+        
+        {/* Media Slider Track */}
+        <div 
+          className="product-image-container absolute inset-0 w-full h-full flex transition-transform duration-500 ease-out" 
+          style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+        >
+          {mediaItems.map((item, idx) => (
+            <div key={idx} className="w-full h-full shrink-0 relative">
+              {item.type === "image" ? (
+                <img
+                  src={item.url}
+                  alt={`${productName} ${productVariant} - Photo ${idx + 1}`}
+                  loading="lazy"
+                  width={1024}
+                  height={1024}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full relative group/video">
+                  <video
+                    src={item.url}
+                    controls
+                    muted
+                    loop
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-1.5 pointer-events-none shadow z-25">
+                    <Film className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Glare effect */}
         <div className="product-card-glare absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 z-10" />
+
+        {/* Color Badge */}
         <span
-          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${colorBadge}`}
+          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider z-20 ${colorBadge}`}
         >
           {displayColor}
         </span>
+
+        {/* Slider Controls (Chevron Arrows) */}
+        {mediaItems.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrevMedia}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-20 shadow-md backdrop-blur-sm cursor-pointer border border-white/10"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextMedia}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-20 shadow-md backdrop-blur-sm cursor-pointer border border-white/10"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            {/* Pagination Indicators (Dots) */}
+            <div className="absolute bottom-3.5 left-0 right-0 flex justify-center gap-1.5 z-20">
+              {mediaItems.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveIndex(idx);
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    activeIndex === idx ? "w-4 bg-brand-gold" : "w-1.5 bg-white/50 hover:bg-white/80"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
+
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
           <h3 className="text-base font-bold text-foreground">{productName}</h3>
