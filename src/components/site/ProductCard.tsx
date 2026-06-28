@@ -8,6 +8,7 @@ import gsap from "gsap";
 export function ProductCard({ product }: { product: Product }) {
   const { t, language } = useLanguage();
   const cardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const transKey = product.id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
@@ -56,6 +57,26 @@ export function ProductCard({ product }: { product: Product }) {
       : "bg-secondary text-primary";
 
   const displayColor = t(`catalog.colors.${product.color}`);
+
+  // Autoplay video when active slide is reached, pause other videos
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const videos = containerRef.current.querySelectorAll("video");
+    videos.forEach((video) => {
+      const idxAttr = video.getAttribute("data-slide-index");
+      if (idxAttr !== null) {
+        const slideIndex = Number(idxAttr);
+        if (slideIndex === activeIndex) {
+          video.muted = true;
+          video.play().catch((err) => {
+            console.log("Autoplay prevented:", err);
+          });
+        } else {
+          video.pause();
+        }
+      }
+    });
+  }, [activeIndex]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -150,7 +171,7 @@ export function ProductCard({ product }: { product: Product }) {
       ref={cardRef}
       className="product-card-reveal opacity-0 group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
-      <div className="relative aspect-square overflow-hidden bg-secondary select-none">
+      <div ref={containerRef} className="relative aspect-square overflow-hidden bg-secondary select-none">
         
         {/* Media Slider Track */}
         <div 
@@ -172,6 +193,7 @@ export function ProductCard({ product }: { product: Product }) {
                 <div className="w-full h-full relative group/video">
                   <video
                     src={item.url}
+                    data-slide-index={idx}
                     controls
                     muted
                     loop
