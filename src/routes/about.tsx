@@ -56,10 +56,11 @@ function AboutPage() {
 
   // Autoplay carousel
   useEffect(() => {
-    if (isAutoplayPaused || lightboxOpen || slides.length === 0) return;
+    const isCurrentVideo = slides[currentIdx]?.type === "video";
+    if (isAutoplayPaused || lightboxOpen || slides.length === 0 || isCurrentVideo) return;
     const timer = setInterval(handleNext, 5000);
     return () => clearInterval(timer);
-  }, [isAutoplayPaused, lightboxOpen, slides.length]);
+  }, [isAutoplayPaused, lightboxOpen, slides.length, currentIdx, slides]);
 
   // Center active thumbnail in thumbnail scrollbar
   useEffect(() => {
@@ -187,8 +188,9 @@ function AboutPage() {
                       className="h-full w-full object-cover"
                       autoPlay
                       muted
-                      loop
+                      loop={false}
                       playsInline
+                      onEnded={handleNext}
                     />
                   ) : (
                     <img

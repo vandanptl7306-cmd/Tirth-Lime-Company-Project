@@ -171,11 +171,11 @@ export function ProductCard({ product }: { product: Product }) {
       ref={cardRef}
       className="product-card-reveal opacity-0 group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
-      <div ref={containerRef} className="relative aspect-square overflow-hidden bg-secondary select-none">
+      <div ref={containerRef} className="product-image-container relative aspect-square overflow-hidden bg-secondary select-none">
         
         {/* Media Slider Track */}
         <div 
-          className="product-image-container absolute inset-0 w-full h-full flex transition-transform duration-500 ease-out" 
+          className="absolute inset-0 w-full h-full flex transition-transform duration-500 ease-out" 
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
           {mediaItems.map((item, idx) => (
